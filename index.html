@@ -204,6 +204,7 @@
                             <option value="CBSE">CBSE</option>
                             <option value="ICSE">ICSE</option>
                             <option value="State">State Board</option>
+                             <option value="Others">Others</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -304,6 +305,184 @@
         }
         // ====================== KIDS PROFILE (with Edit) ======================
         
+        // ====================== FEES & EXPENSES (FULLY FUNCTIONAL) ======================
+        function renderExpenses() {
+            const content = document.getElementById('content');
+            content.innerHTML += `
+                <button class="btn btn-add" onclick="showExpenseForm()">+ Add New Expense</button>
+
+                <div class="form-container" id="expenseForm">
+                    <h3 id="expenseFormTitle">Add New Expense</h3>
+                    
+                    <div class="form-group">
+                        <label>Child</label>
+                        <select id="expKidId"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Academic Year</label>
+                        <select id="expYear"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Expense Type</label>
+                        <select id="expType">
+                            <option value="School Fees">School Fees</option>
+                            <option value="Books & Stationery">Books & Stationery</option>
+                            <option value="Uniform">Uniform</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Tuition">Tuition / Coaching</option>
+                            <option value="Exam Fees">Exam Fees</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (₹)</label>
+                        <input type="number" id="expAmount" placeholder="Enter amount">
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Date</label>
+                        <input type="date" id="expDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes (Optional)</label>
+                        <input type="text" id="expNotes" placeholder="Any remarks">
+                    </div>
+
+                    <div class="form-buttons">
+                        <button class="btn btn-save" onclick="saveExpense()">Save Expense</button>
+                        <button class="btn btn-cancel" onclick="hideExpenseForm()">Cancel</button>
+                    </div>
+                </div>
+
+                <h3>All Expenses</h3>
+                <table id="expensesTable">
+                    <thead><tr><th>Child</th><th>Year</th><th>Type</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            loadKidsForDropdown();
+            loadExpensesTable();
+        }
+
+        async function loadKidsForDropdown() {
+            const { docs } = await db.collection('kids').get();
+            const select = document.getElementById('expKidId');
+            select.innerHTML = '<option value="">-- Select Child --</option>';
+            docs.forEach(doc => {
+                const kid = doc.data();
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.textContent = kid.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function populateAcademicYears() {
+            const select = document.getElementById('expYear');
+            select.innerHTML = '';
+            const currentYear = new Date().getFullYear();
+            for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                select.appendChild(opt);
+            }
+        }
+
+        function showExpenseForm(expense = null) {
+            document.getElementById('expenseForm').style.display = 'block';
+            editingExpenseId = expense ? expense.id : null;
+            document.getElementById('expenseFormTitle').textContent = expense ? "Edit Expense" : "Add New Expense";
+
+            populateAcademicYears();
+
+            if (expense) {
+                document.getElementById('expKidId').value = expense.kidId || '';
+                document.getElementById('expYear').value = expense.year || '';
+                document.getElementById('expType').value = expense.type || '';
+                document.getElementById('expAmount').value = expense.amount || '';
+                document.getElementById('expDate').value = expense.date || '';
+                document.getElementById('expNotes').value = expense.notes || '';
+            }
+        }
+
+        function hideExpenseForm() {
+            document.getElementById('expenseForm').style.display = 'none';
+        }
+
+        async function saveExpense() {
+            const kidId = document.getElementById('expKidId').value;
+            if (!kidId) return alert("Please select a child");
+
+            const expenseData = {
+                kidId: kidId,
+                kidName: document.getElementById('expKidId').options[document.getElementById('expKidId').selectedIndex].text,
+                year: document.getElementById('expYear').value,
+                type: document.getElementById('expType').value,
+                amount: parseFloat(document.getElementById('expAmount').value) || 0,
+                date: document.getElementById('expDate').value,
+                notes: document.getElementById('expNotes').value
+            };
+
+            if (editingExpenseId) {
+                await db.collection('expenses').doc(editingExpenseId).update(expenseData);
+            } else {
+                await db.collection('expenses').add(expenseData);
+            }
+
+            alert("Expense saved successfully!");
+            hideExpenseForm();
+            loadExpensesTable();
+        }
+
+        async function loadExpensesTable() {
+            const { docs } = await db.collection('expenses').get();
+            const tbody = document.querySelector('#expensesTable tbody');
+            tbody.innerHTML = '';
+
+            let total = 0;
+
+            docs.forEach(doc => {
+                const exp = doc.data();
+                total += exp.amount || 0;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${exp.kidName || '-'}</td>
+                    <td>${exp.year || '-'}</td>
+                    <td>${exp.type || '-'}</td>
+                    <td>₹${exp.amount || 0}</td>
+                    <td>${exp.date || '-'}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editExpense('${doc.id}')">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteExpense('${doc.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Add total row
+            const totalRow = document.createElement('tr');
+            totalRow.style.fontWeight = 'bold';
+            totalRow.innerHTML = `<td colspan="3">Total Expenses</td><td>₹${total}</td><td colspan="2"></td>`;
+            tbody.appendChild(totalRow);
+        }
+
+        function editExpense(id) {
+            db.collection('expenses').doc(id).get().then(doc => {
+                if (doc.exists) {
+                    showExpenseForm({ id: doc.id, ...doc.data() });
+                }
+            });
+        }
+
+        async function deleteExpense(id) {
+            if (confirm("Delete this expense?")) {
+                await db.collection('expenses').doc(id).delete();
+                loadExpensesTable();
+            }
+        }
+        
+        // ====================== FEES & EXPENSES (FULLY FUNCTIONAL) ======================
         // Initialize
         renderTabs();
         renderContent();

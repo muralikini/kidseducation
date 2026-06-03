@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📚 Kids Education Manager</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         :root { --bg: #f8fafc; --card: #ffffff; --text: #1f2937; --border: #e2e8f0; }
         body.dark { --bg: #0f172a; --card: #1e2937; --text: #e2e8f0; --border: #334155; }
@@ -22,6 +24,10 @@
         body.dark th { background: #334155; }
         .btn { padding: 10px 18px; margin: 5px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-add { background: #1e40af; color: white; }
+        .btn-edit { background: #3b82f6; color: white; }
+        .btn-delete { background: #ef4444; color: white; }
+        .form-container { background: #f8fafc; padding: 20px; border-radius: 8px; margin: 15px 0; display: none; }
+        body.dark .form-container { background: #334155; }
     </style>
 </head>
 <body>
@@ -50,13 +56,26 @@
     </div>
 
     <script>
+        // ================== FIREBASE CONFIG ==================
+        const firebaseConfig = {
+          apiKey: "AIzaSyApHwBPmNIsuAJHfz7nM40t4cHL_u481P8",
+          authDomain: "kids-education-manager.firebaseapp.com",
+          projectId: "kids-education-manager",
+          storageBucket: "kids-education-manager.firebasestorage.app",
+          messagingSenderId: "473594316250",
+          appId: "1:473594316250:web:17165d047e267abc6a6ce3"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         let currentUser = null;
         let currentTab = 'dashboard';
 
-        let kids = JSON.parse(localStorage.getItem('kids')) || [];
-        let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-        let exams = JSON.parse(localStorage.getItem('exams')) || [];
-        let journals = JSON.parse(localStorage.getItem('journals')) || [];
+        let kids = [];
+        let expenses = [];
+        let exams = [];
+        let journals = [];
 
         const modules = [
             { id: 'dashboard', name: 'Dashboard' },
@@ -65,13 +84,6 @@
             { id: 'exams', name: 'Academic Performance' },
             { id: 'journal', name: 'Activities Journal' }
         ];
-
-        function saveData() {
-            localStorage.setItem('kids', JSON.stringify(kids));
-            localStorage.setItem('expenses', JSON.stringify(expenses));
-            localStorage.setItem('exams', JSON.stringify(exams));
-            localStorage.setItem('journals', JSON.stringify(journals));
-        }
 
         function login() {
             const username = document.getElementById('username').value.trim();
@@ -113,15 +125,97 @@
             content.innerHTML = `<h2>${modules.find(m => m.id === currentTab).name}</h2>`;
 
             if (currentTab === 'dashboard') renderDashboard();
-            else content.innerHTML += `<p>${modules.find(m => m.id === currentTab).name} module is ready for full implementation.</p>`;
+            else if (currentTab === 'kids') renderKids();
+            else content.innerHTML += `<p>Module under development...</p>`;
         }
 
         function renderDashboard() {
             document.getElementById('content').innerHTML = `
                 <h2>📊 Dashboard</h2>
                 <p><strong>Total Kids:</strong> ${kids.length}</p>
-                <p><strong>Total Expenses:</strong> ₹${expenses.reduce((sum, e) => sum + (e.amount||0), 0)}</p>
             `;
+        }
+
+        // ====================== KIDS PROFILE ======================
+        function renderKids() {
+            const content = document.getElementById('content');
+            content.innerHTML += `
+                <button class="btn btn-add" onclick="showKidForm()">+ Add New Kid</button>
+
+                <div class="form-container" id="kidForm">
+                    <h3 id="kidFormTitle">Add New Kid</h3>
+                    <div class="form-group"><label>Full Name</label><input type="text" id="kidName"></div>
+                    <div class="form-group"><label>Date of Birth</label><input type="date" id="kidDOB"></div>
+                    <div class="form-group"><label>Current Class</label><input type="text" id="kidClass"></div>
+                    <div class="form-group"><label>Board</label><select id="kidStream"><option value="CBSE">CBSE</option><option value="ICSE">ICSE</option><option value="State">State Board</option></select></div>
+                    <div class="form-group"><label>School</label><input type="text" id="kidSchool"></div>
+                    <button class="btn btn-add" onclick="saveKid()">Save</button>
+                    <button class="btn" onclick="hideKidForm()">Cancel</button>
+                </div>
+
+                <h3>All Kids</h3>
+                <table id="kidsTable">
+                    <thead><tr><th>Name</th><th>DOB</th><th>Class</th><th>Board</th><th>School</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            loadKidsTable();
+        }
+
+        function showKidForm() {
+            document.getElementById('kidForm').style.display = 'block';
+        }
+
+        function hideKidForm() {
+            document.getElementById('kidForm').style.display = 'none';
+        }
+
+        function saveKid() {
+            const name = document.getElementById('kidName').value.trim();
+            if (!name) return alert("Name is required");
+
+            kids.push({
+                id: Date.now(),
+                name: name,
+                dob: document.getElementById('kidDOB').value,
+                currentClass: document.getElementById('kidClass').value,
+                stream: document.getElementById('kidStream').value,
+                school: document.getElementById('kidSchool').value
+            });
+
+            saveData();
+            hideKidForm();
+            loadKidsTable();
+        }
+
+        function loadKidsTable() {
+            const tbody = document.querySelector('#kidsTable tbody');
+            tbody.innerHTML = '';
+
+            kids.forEach(kid => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${kid.name}</td>
+                    <td>${kid.dob}</td>
+                    <td>${kid.currentClass}</td>
+                    <td>${kid.stream}</td>
+                    <td>${kid.school}</td>
+                    <td><button onclick="deleteKid(${kid.id})">Delete</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function deleteKid(id) {
+            if (confirm("Delete this kid?")) {
+                kids = kids.filter(k => k.id !== id);
+                saveData();
+                loadKidsTable();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('kids', JSON.stringify(kids));
         }
 
         // Initialize

@@ -4,15 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📚 Kids Education Manager</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; }
         .login-box { max-width: 420px; margin: 100px auto; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; }
-        button { width: 100%; padding: 14px; background: #1e40af; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 8px 0; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        button { width: 100%; padding: 14px; background: #1e40af; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
         .main { display: none; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
     </style>
 </head>
 <body>
@@ -24,27 +22,38 @@
         <input type="text" id="username" value="admin" placeholder="Username"><br>
         <input type="password" id="password" value="admin123" placeholder="Password"><br><br>
         <button onclick="login()">Login</button>
+        <p id="errorMsg" style="color:red; margin-top:15px;"></p>
     </div>
 
     <!-- MAIN APP -->
     <div class="main" id="mainApp">
-        <h1>Kids Education Manager</h1>
-        <button onclick="logout()">Logout</button>
-        <hr>
+        <h1>Welcome to Kids Education Manager</h1>
         <button onclick="switchTab('kids')">Kids Profile</button>
-        <div id="content"></div>
+        <div id="content" style="margin-top:20px;"></div>
+        <button onclick="logout()">Logout</button>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://dbitafgrdlzwhyoqofwq.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_aU-605gJnM8-MGtqKNlEtQ_fOG_ZsOB';
 
-        let supabaseClient = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabaseClient = null;
 
         async function login() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            switchTab('kids');
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (username === "admin" && password === "admin123") {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                
+                // Initialize Supabase
+                supabaseClient = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log("Supabase initialized");
+                switchTab('kids');
+            } else {
+                document.getElementById('errorMsg').textContent = "Invalid credentials";
+            }
         }
 
         function logout() {
@@ -53,40 +62,10 @@
         }
 
         function switchTab(tab) {
-            if (tab === 'kids') renderKids();
-        }
-
-        async function renderKids() {
-            const { data, error } = await supabaseClient.from('kids').select('*');
-            let html = `<h2>Kids Profile</h2><button onclick="showAddKidForm()">+ Add New Kid</button>`;
-
-            if (data && data.length > 0) {
-                html += `<table><tr><th>Name</th><th>DOB</th><th>Class</th><th>School</th></tr>`;
-                data.forEach(kid => {
-                    html += `<tr><td>${kid.name}</td><td>${kid.dob}</td><td>${kid.currentClass}</td><td>${kid.school}</td></tr>`;
-                });
-                html += `</table>`;
-            } else {
-                html += `<p>No kids added yet.</p>`;
+            const content = document.getElementById('content');
+            if (tab === 'kids') {
+                content.innerHTML = `<h2>Kids Profile</h2><p>Module ready. Add kids functionality coming next.</p>`;
             }
-
-            document.getElementById('content').innerHTML = html;
-        }
-
-        function showAddKidForm() {
-            const name = prompt("Enter Kid's Full Name:");
-            if (!name) return;
-
-            const dob = prompt("Date of Birth (YYYY-MM-DD):");
-            const currentClass = prompt("Current Class/Grade:");
-            const school = prompt("School Name:");
-
-            supabaseClient.from('kids').insert([{
-                name, dob, currentClass, school, stream: "CBSE"
-            }]).then(() => {
-                alert("Kid added successfully!");
-                renderKids();
-            });
         }
     </script>
 </body>

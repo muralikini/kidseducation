@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📚 Kids Education Manager</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; }
         .login-box { max-width: 420px; margin: 100px auto; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; }
         input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
         button { width: 100%; padding: 14px; background: #1e40af; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
-        .main { display: none; padding: 20px; }
+        .main { display: none; padding: 30px; }
     </style>
 </head>
 <body>
@@ -27,41 +26,20 @@
 
     <!-- MAIN APP -->
     <div class="main" id="mainApp">
-        <h1>Welcome to Kids Education Manager</h1>
-        <p>✅ Supabase Connected</p>
+        <h1>Welcome, Admin</h1>
+        <p>✅ Login Successful</p>
+        <p><strong>Note:</strong> Currently using local storage (each user has separate data).</p>
         <button onclick="logout()">Logout</button>
     </div>
 
     <script>
-        // Supabase Config
-        const SUPABASE_URL = 'https://dbitafgrdlzwhyoqofwq.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_aU-605gJnM8-MGtqKNlEtQ_fOG_ZsOB';
-
-        let supabaseClient = null;
-
-        async function initSupabase() {
-            try {
-                supabaseClient = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log("✅ Supabase initialized");
-                return true;
-            } catch(e) {
-                console.error("Supabase init failed", e);
-                return false;
-            }
-        }
-
-        async function login() {
+        function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
             if (username === "admin" && password === "admin123") {
-                const success = await initSupabase();
-                if (success) {
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
-                } else {
-                    alert("Login successful but Supabase connection failed.");
-                }
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
             } else {
                 document.getElementById('errorMsg').textContent = "Invalid username or password";
             }

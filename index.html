@@ -123,7 +123,8 @@
             { id: 'kids', name: 'Kids Profile' },
             { id: 'expenses', name: 'Fees & Expenses' },
             { id: 'exams', name: 'Academic Performance' },
-            { id: 'journal', name: 'Activities Journal' }
+            { id: 'journal', name: 'Activities Journal' },
+            { id: 'admin', name: 'Admin Panel' }
         ];
 
         function login() {
@@ -170,6 +171,7 @@
             else if (currentTab === 'expenses') renderExpenses();
             else if (currentTab === 'exams') renderExams();
             else if (currentTab === 'journal') renderJournal();
+            else if (currentTab === 'admin') renderAdminPanel();
         }
 
         function renderDashboard() {

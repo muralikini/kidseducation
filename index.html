@@ -36,12 +36,10 @@
     </div>
 
     <script>
-                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
-                
-                const SUPABASE_URL = 'https://dbitafgrdlzwhyoqofwq.supabase.co';
-                const SUPABASE_ANON_KEY = 'sb_publishable_aU-605gJnM8-MGtqKNlEtQ_fOG_ZsOB';
+        const SUPABASE_URL = 'https://dbitafgrdlzwhyoqofwq.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_aU-605gJnM8-MGtqKNlEtQ_fOG_ZsOB';
 
-                supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabaseClient = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function login() {
             document.getElementById('loginScreen').style.display = 'none';

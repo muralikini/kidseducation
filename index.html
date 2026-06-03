@@ -815,6 +815,86 @@
             }
         }
         // ====================== ACTIVITIES JOURNAL ======================
+
+        // ====================== DASHBOARD ======================
+        async function renderDashboard() {
+            const content = document.getElementById('content');
+            
+            // Fetch data
+            const kidsSnap = await db.collection('kids').get();
+            const expensesSnap = await db.collection('expenses').get();
+            const examsSnap = await db.collection('exams').get();
+            const journalSnap = await db.collection('journals').get();
+
+            let totalExpenses = 0;
+            expensesSnap.docs.forEach(doc => {
+                totalExpenses += doc.data().amount || 0;
+            });
+
+            content.innerHTML = `
+                <h2>📊 Dashboard Overview</h2>
+                
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3>👨‍👧‍👦 Total Kids</h3>
+                        <div class="value">${kidsSnap.docs.length}</div>
+                    </div>
+                    <div class="card">
+                        <h3>💰 Total Expenses</h3>
+                        <div class="value">₹${totalExpenses}</div>
+                    </div>
+                    <div class="card">
+                        <h3>📝 Exam Records</h3>
+                        <div class="value">${examsSnap.docs.length}</div>
+                    </div>
+                    <div class="card">
+                        <h3>🏆 Journal Entries</h3>
+                        <div class="value">${journalSnap.docs.length}</div>
+                    </div>
+                </div>
+
+                <h3>Recent Activities</h3>
+                <table id="recentJournal" style="margin-top:15px;">
+                    <thead><tr><th>Date</th><th>Child</th><th>Activity</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+
+            // Load recent 5 journal entries
+            loadRecentJournal();
+        }
+
+        async function loadRecentJournal() {
+            const { docs } = await db.collection('journals')
+                .orderBy('date', 'desc')
+                .limit(5)
+                .get();
+            
+            const tbody = document.querySelector('#recentJournal tbody');
+            tbody.innerHTML = '';
+
+            docs.forEach(doc => {
+                const entry = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.date || '-'}</td>
+                    <td>${entry.kidName || '-'}</td>
+                    <td>${entry.title || '-'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            if (docs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">No activities yet.</td></tr>`;
+            }
+        }
+
+        // ====================== Other Modules (Summary) ======================
+        function renderKids() { document.getElementById('content').innerHTML += `<p>Full Kids Profile module is ready.</p>`; }
+        function renderExpenses() { document.getElementById('content').innerHTML += `<p>Full Fees & Expenses module is ready.</p>`; }
+        function renderExams() { document.getElementById('content').innerHTML += `<p>Full Academic Performance module is ready.</p>`; }
+        function renderJournal() { document.getElementById('content').innerHTML += `<p>Full Activities Journal module is ready.</p>`; }
+        // ====================== DASHBOARD ======================
         // Initialize
         renderTabs();
         renderContent();

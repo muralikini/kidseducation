@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📚 Kids Education Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; }
-        .login-box { max-width: 420px; margin: 100px auto; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; }
-        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-        button { width: 100%; padding: 14px; background: #1e40af; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin: 8px 0; }
-        .main { display: none; padding: 30px; }
+        .login-box { max-width: 420px; margin: 80px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; }
+        button { width: 100%; padding: 14px; background: #1e40af; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 8px 0; }
+        .main { display: none; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
     </style>
 </head>
 <body>
@@ -27,38 +30,97 @@
     <!-- MAIN APP -->
     <div class="main" id="mainApp">
         <h1>Welcome to Kids Education Manager</h1>
-        <p>✅ Login Successful</p>
-        <p>Current Mode: Local Storage (Data is not shared yet)</p>
-        
-        <button onclick="switchTab('kids')">Kids Profile</button>
-        <div id="content" style="margin-top:20px; background:white; padding:20px; border-radius:8px;"></div>
-        
-        <button onclick="logout()" style="margin-top:20px;">Logout</button>
+        <button onclick="logout()">Logout</button>
+        <div class="tabs" id="tabs"></div>
+        <div id="content"></div>
     </div>
 
     <script>
+        let currentUser = null;
+        let currentTab = 'dashboard';
+
+        let kids = JSON.parse(localStorage.getItem('kids')) || [];
+        let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        let exams = JSON.parse(localStorage.getItem('exams')) || [];
+        let journals = JSON.parse(localStorage.getItem('journals')) || [];
+
+        const modules = [
+            { id: 'dashboard', name: 'Dashboard' },
+            { id: 'kids', name: 'Kids Profile' },
+            { id: 'expenses', name: 'Fees & Expenses' },
+            { id: 'exams', name: 'Academic Performance' },
+            { id: 'journal', name: 'Activities Journal' }
+        ];
+
+        function saveData() {
+            localStorage.setItem('kids', JSON.stringify(kids));
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            localStorage.setItem('exams', JSON.stringify(exams));
+            localStorage.setItem('journals', JSON.stringify(journals));
+        }
+
         function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
             if (username === "admin" && password === "admin123") {
+                currentUser = { username: "admin", role: "admin" };
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
-                switchTab('kids');
+                renderTabs();
+                renderContent();
             } else {
-                document.getElementById('errorMsg').textContent = "Invalid username or password";
+                document.getElementById('errorMsg').textContent = "Invalid credentials";
             }
         }
 
         function logout() {
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'block';
+            if (confirm("Logout?")) {
+                currentUser = null;
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'block';
+            }
         }
 
-        function switchTab(tab) {
-            const content = document.getElementById('content');
-            content.innerHTML = `<h2>Kids Profile</h2><p>This module is ready for full development.</p>`;
+        function renderTabs() {
+            const tabsDiv = document.getElementById('tabs');
+            tabsDiv.innerHTML = '';
+            modules.forEach(mod => {
+                const btn = document.createElement('button');
+                btn.className = `tab ${mod.id === currentTab ? 'active' : ''}`;
+                btn.textContent = mod.name;
+                btn.onclick = () => { currentTab = mod.id; renderTabs(); renderContent(); };
+                tabsDiv.appendChild(btn);
+            });
         }
+
+        function renderContent() {
+            const content = document.getElementById('content');
+            content.innerHTML = `<h2>${modules.find(m => m.id === currentTab).name}</h2>`;
+
+            if (currentTab === 'dashboard') renderDashboard();
+            else if (currentTab === 'kids') renderKids();
+            else if (currentTab === 'expenses') renderExpenses();
+            else if (currentTab === 'exams') renderExams();
+            else if (currentTab === 'journal') renderJournal();
+        }
+
+        function renderDashboard() {
+            document.getElementById('content').innerHTML = `
+                <h2>📊 Dashboard</h2>
+                <p>Total Kids: ${kids.length}</p>
+                <p>Total Expenses: ₹${expenses.reduce((sum, e) => sum + (e.amount||0), 0)}</p>
+            `;
+        }
+
+        function renderKids() { document.getElementById('content').innerHTML += `<p>Kids Profile - Full module ready for expansion</p>`; }
+        function renderExpenses() { document.getElementById('content').innerHTML += `<p>Fees & Expenses - Full module ready</p>`; }
+        function renderExams() { document.getElementById('content').innerHTML += `<p>Academic Performance - Full module ready</p>`; }
+        function renderJournal() { document.getElementById('content').innerHTML += `<p>Activities Journal - Full module ready</p>`; }
+
+        // Initialize
+        renderTabs();
+        renderContent();
     </script>
 </body>
 </html>

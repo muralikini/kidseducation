@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📚 Kids Education Manager</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; }
         .login-box { max-width: 420px; margin: 100px auto; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; }
         input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
-        button { width: 100%; padding: 14px; background: #1e40af; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+        button { width: 100%; padding: 14px; background: #1e40af; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; margin: 8px 0; }
         .main { display: none; padding: 20px; }
     </style>
 </head>
@@ -28,31 +27,23 @@
     <!-- MAIN APP -->
     <div class="main" id="mainApp">
         <h1>Welcome to Kids Education Manager</h1>
+        <p>✅ Login Successful</p>
         <button onclick="switchTab('kids')">Kids Profile</button>
-        <div id="content" style="margin-top:20px;"></div>
+        <div id="content" style="margin-top:20px; padding:20px; background:white; border-radius:8px;"></div>
         <button onclick="logout()">Logout</button>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://dbitafgrdlzwhyoqofwq.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_aU-605gJnM8-MGtqKNlEtQ_fOG_ZsOB';
-
-        let supabaseClient = null;
-
-        async function login() {
+        function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
             if (username === "admin" && password === "admin123") {
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
-                
-                // Initialize Supabase
-                supabaseClient = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log("Supabase initialized");
                 switchTab('kids');
             } else {
-                document.getElementById('errorMsg').textContent = "Invalid credentials";
+                document.getElementById('errorMsg').textContent = "Invalid username or password";
             }
         }
 
@@ -64,7 +55,11 @@
         function switchTab(tab) {
             const content = document.getElementById('content');
             if (tab === 'kids') {
-                content.innerHTML = `<h2>Kids Profile</h2><p>Module ready. Add kids functionality coming next.</p>`;
+                content.innerHTML = `
+                    <h2>Kids Profile</h2>
+                    <p>✅ Module is ready.</p>
+                    <p>Shared database integration coming in next step.</p>
+                `;
             }
         }
     </script>

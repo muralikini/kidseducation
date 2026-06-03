@@ -41,7 +41,7 @@
     <script>
         // ================== SUPABASE CONFIG ==================
         const SUPABASE_URL = 'https://dbitafgrdlzwhyoqofwq.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRiaXRhZmdyZGx6d2h5b3FvZndxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0Njg5MzMsImV4cCI6MjA5NjA0NDkzM30.e6W3vBPktX8kdMRZYNMh2L2Wme7o7fongSQcBG7JCdA';
+        const SUPABASE_KEY = 'sb_publishable_aU-605gJnM8-MGtqKNlEtQ_fOG_ZsOB';
 
         let supabaseClient = null;
 
@@ -51,7 +51,7 @@
 
             if (username === "admin" && password === "admin123") {
                 try {
-                    supabaseClient = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    supabaseClient = Supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                     console.log("Supabase connected successfully");
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';

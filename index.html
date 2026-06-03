@@ -168,6 +168,7 @@
             if (currentTab === 'dashboard') renderDashboard();
             else if (currentTab === 'kids') renderKids();
             else if (currentTab === 'expenses') renderExpenses();
+            else if (currentTab === 'exams') renderExams();
             else content.innerHTML += `<p>Module under development...</p>`;
         }
 
@@ -484,6 +485,188 @@
         }
         
         // ====================== FEES & EXPENSES (FULLY FUNCTIONAL) ======================
+
+        // ====================== ACADEMIC PERFORMANCE (FULLY FUNCTIONAL) ======================
+        function renderExams() {
+            const content = document.getElementById('content');
+            content.innerHTML += `
+                <button class="btn btn-add" onclick="showExamForm()">+ Add Exam Result</button>
+
+                <div class="form-container" id="examForm">
+                    <h3 id="examFormTitle">Add Exam Result</h3>
+                    
+                    <div class="form-group">
+                        <label>Child</label>
+                        <select id="examKidId"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Academic Year</label>
+                        <select id="examYear"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Exam Name</label>
+                        <select id="examName">
+                            <option value="Unit Test 1">Unit Test 1</option>
+                            <option value="Unit Test 2">Unit Test 2</option>
+                            <option value="Mid Term">Mid Term</option>
+                            <option value="Final Exam">Final Exam</option>
+                            <option value="Quarterly">Quarterly</option>
+                            <option value="Half Yearly">Half Yearly</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <input type="text" id="examSubject" placeholder="e.g., Mathematics">
+                    </div>
+                    <div class="form-group">
+                        <label>Marks Obtained</label>
+                        <input type="number" id="marksObtained" placeholder="85">
+                    </div>
+                    <div class="form-group">
+                        <label>Total Marks</label>
+                        <input type="number" id="totalMarks" value="100" placeholder="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Exam Date</label>
+                        <input type="date" id="examDate">
+                    </div>
+
+                    <div class="form-buttons">
+                        <button class="btn btn-save" onclick="saveExam()">Save Result</button>
+                        <button class="btn btn-cancel" onclick="hideExamForm()">Cancel</button>
+                    </div>
+                </div>
+
+                <h3>All Academic Records</h3>
+                <table id="examsTable">
+                    <thead><tr><th>Child</th><th>Year</th><th>Exam</th><th>Subject</th><th>Score</th><th>Percentage</th><th>Date</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            loadKidsForExamDropdown();
+            loadExamsTable();
+        }
+
+        async function loadKidsForExamDropdown() {
+            const { docs } = await db.collection('kids').get();
+            const select = document.getElementById('examKidId');
+            select.innerHTML = '<option value="">-- Select Child --</option>';
+            docs.forEach(doc => {
+                const kid = doc.data();
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.textContent = kid.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function populateExamYears() {
+            const select = document.getElementById('examYear');
+            select.innerHTML = '';
+            const currentYear = new Date().getFullYear();
+            for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                select.appendChild(opt);
+            }
+        }
+
+        function showExamForm(exam = null) {
+            document.getElementById('examForm').style.display = 'block';
+            editingExamId = exam ? exam.id : null;
+            document.getElementById('examFormTitle').textContent = exam ? "Edit Exam Result" : "Add Exam Result";
+
+            populateExamYears();
+
+            if (exam) {
+                document.getElementById('examKidId').value = exam.kidId || '';
+                document.getElementById('examYear').value = exam.year || '';
+                document.getElementById('examName').value = exam.examName || '';
+                document.getElementById('examSubject').value = exam.subject || '';
+                document.getElementById('marksObtained').value = exam.marksObtained || '';
+                document.getElementById('totalMarks').value = exam.totalMarks || 100;
+                document.getElementById('examDate').value = exam.date || '';
+            }
+        }
+
+        function hideExamForm() {
+            document.getElementById('examForm').style.display = 'none';
+        }
+
+        async function saveExam() {
+            const kidId = document.getElementById('examKidId').value;
+            if (!kidId) return alert("Please select a child");
+
+            const marksObtained = parseFloat(document.getElementById('marksObtained').value) || 0;
+            const totalMarks = parseFloat(document.getElementById('totalMarks').value) || 100;
+            const percentage = totalMarks > 0 ? ((marksObtained / totalMarks) * 100).toFixed(2) : 0;
+
+            const examData = {
+                kidId: kidId,
+                kidName: document.getElementById('examKidId').options[document.getElementById('examKidId').selectedIndex].text,
+                year: document.getElementById('examYear').value,
+                examName: document.getElementById('examName').value,
+                subject: document.getElementById('examSubject').value,
+                marksObtained: marksObtained,
+                totalMarks: totalMarks,
+                percentage: parseFloat(percentage),
+                date: document.getElementById('examDate').value
+            };
+
+            if (editingExamId) {
+                await db.collection('exams').doc(editingExamId).update(examData);
+            } else {
+                await db.collection('exams').add(examData);
+            }
+
+            alert("Exam result saved successfully!");
+            hideExamForm();
+            loadExamsTable();
+        }
+
+        async function loadExamsTable() {
+            const { docs } = await db.collection('exams').get();
+            const tbody = document.querySelector('#examsTable tbody');
+            tbody.innerHTML = '';
+
+            docs.forEach(doc => {
+                const exam = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${exam.kidName || '-'}</td>
+                    <td>${exam.year || '-'}</td>
+                    <td>${exam.examName || '-'}</td>
+                    <td>${exam.subject || '-'}</td>
+                    <td>${exam.marksObtained} / ${exam.totalMarks}</td>
+                    <td class="percentage">${exam.percentage}%</td>
+                    <td>${exam.date || '-'}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editExam('${doc.id}')">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteExam('${doc.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function editExam(id) {
+            db.collection('exams').doc(id).get().then(doc => {
+                if (doc.exists) {
+                    showExamForm({ id: doc.id, ...doc.data() });
+                }
+            });
+        }
+
+        async function deleteExam(id) {
+            if (confirm("Delete this exam record?")) {
+                await db.collection('exams').doc(id).delete();
+                loadExamsTable();
+            }
+        }
+        // ====================== ACADEMIC PERFORMANCE (FULLY FUNCTIONAL) ======================
+
         // Initialize
         renderTabs();
         renderContent();

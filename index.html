@@ -7,33 +7,51 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; }
-        .login-box { max-width: 420px; margin: 100px auto; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; }
-        button { width: 100%; padding: 14px; background: #1e40af; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 8px 0; }
-        .main { display: none; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; border: 1px solid #ddd; }
+        :root { --bg: #f8fafc; --card: #ffffff; --text: #1f2937; --border: #e2e8f0; }
+        body.dark { --bg: #0f172a; --card: #1e2937; --text: #e2e8f0; --border: #334155; }
+        body { font-family: Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+        header { background: #1e40af; color: white; padding: 15px; text-align: center; position: relative; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 20px; }
+        .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; }
+        .tab { padding: 12px 24px; background: #e2e8f0; border: none; cursor: pointer; border-radius: 8px 8px 0 0; font-weight: bold; }
+        body.dark .tab { background: #334155; color: #cbd5e1; }
+        .tab.active { background: #1e40af; color: white; }
+        .content { background: var(--card); padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th, td { padding: 12px; border: 1px solid var(--border); text-align: left; }
+        th { background: #f1f5f9; }
+        body.dark th { background: #334155; }
+        .btn { padding: 10px 18px; margin: 5px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-add { background: #1e40af; color: white; }
+        .btn-edit { background: #3b82f6; color: white; }
+        .btn-delete { background: #ef4444; color: white; }
+        .form-container { background: #f8fafc; padding: 20px; border-radius: 8px; margin: 15px 0; display: none; }
+        body.dark .form-container { background: #334155; }
     </style>
 </head>
 <body>
 
     <!-- LOGIN -->
-    <div class="login-box" id="loginScreen">
+    <div class="login-box" id="loginScreen" style="max-width: 420px; margin: 100px auto; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center;">
         <h1>📚 Kids Education Manager</h1>
         <h2>Login</h2>
         <input type="text" id="username" value="admin" placeholder="Username"><br><br>
         <input type="password" id="password" value="admin123" placeholder="Password"><br><br>
-        <button onclick="login()">Login</button>
+        <button onclick="login()" style="padding:14px 40px; background:#1e40af; color:white; border:none; border-radius:6px; cursor:pointer;">Login</button>
         <p id="errorMsg" style="color:red; margin-top:15px;"></p>
     </div>
 
     <!-- MAIN APP -->
-    <div class="main" id="mainApp">
-        <h1>Welcome to Kids Education Manager</h1>
-        <button onclick="logout()">Logout</button>
-        <button onclick="switchTab('kids')">Kids Profile</button>
-        <div id="content" style="margin-top:20px;"></div>
+    <div id="mainApp" style="display:none;">
+        <header>
+            <h1>📚 Kids Education Manager</h1>
+            <button onclick="logout()" style="position:absolute; top:15px; right:20px; padding:8px 16px; background:#ef4444; color:white; border:none; border-radius:5px;">Logout</button>
+        </header>
+
+        <div class="container">
+            <div class="tabs" id="tabs"></div>
+            <div class="content" id="content"></div>
+        </div>
     </div>
 
     <script>
@@ -51,8 +69,19 @@
         const db = firebase.firestore();
 
         let currentUser = null;
+        let currentTab = 'dashboard';
 
-        async function login() {
+        let kids = [];
+
+        const modules = [
+            { id: 'dashboard', name: 'Dashboard' },
+            { id: 'kids', name: 'Kids Profile' },
+            { id: 'expenses', name: 'Fees & Expenses' },
+            { id: 'exams', name: 'Academic Performance' },
+            { id: 'journal', name: 'Activities Journal' }
+        ];
+
+        function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
@@ -60,54 +89,134 @@
                 currentUser = { username: "admin", role: "admin" };
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
-                switchTab('kids');
+                renderTabs();
+                renderContent();
             } else {
                 document.getElementById('errorMsg').textContent = "Invalid credentials";
             }
         }
 
         function logout() {
-            document.getElementById('mainApp').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'block';
+            if (confirm("Logout?")) {
+                currentUser = null;
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'block';
+            }
         }
 
-        function switchTab(tab) {
-            if (tab === 'kids') renderKids();
-        }
-
-        async function renderKids() {
-            const { docs } = await db.collection('kids').get();
-            let html = `<h2>Kids Profile</h2><button onclick="addKid()">+ Add New Kid</button>`;
-
-            html += `<table><tr><th>Name</th><th>DOB</th><th>Class</th><th>School</th></tr>`;
-            docs.forEach(doc => {
-                const kid = doc.data();
-                html += `<tr><td>${kid.name}</td><td>${kid.dob}</td><td>${kid.currentClass}</td><td>${kid.school}</td></tr>`;
+        function renderTabs() {
+            const tabsDiv = document.getElementById('tabs');
+            tabsDiv.innerHTML = '';
+            modules.forEach(mod => {
+                const btn = document.createElement('button');
+                btn.className = `tab ${mod.id === currentTab ? 'active' : ''}`;
+                btn.textContent = mod.name;
+                btn.onclick = () => { currentTab = mod.id; renderTabs(); renderContent(); };
+                tabsDiv.appendChild(btn);
             });
-            html += `</table>`;
-
-            document.getElementById('content').innerHTML = html;
         }
 
-        async function addKid() {
-            const name = prompt("Enter Kid's Full Name:");
-            if (!name) return;
+        function renderContent() {
+            const content = document.getElementById('content');
+            content.innerHTML = `<h2>${modules.find(m => m.id === currentTab).name}</h2>`;
 
-            const dob = prompt("Date of Birth (YYYY-MM-DD):", "2015-05-20");
-            const currentClass = prompt("Current Class:", "5th Grade");
-            const school = prompt("School Name:", "Demo School");
+            if (currentTab === 'dashboard') renderDashboard();
+            else if (currentTab === 'kids') renderKids();
+            else content.innerHTML += `<p>Module under development...</p>`;
+        }
+
+        function renderDashboard() {
+            document.getElementById('content').innerHTML = `
+                <h2>📊 Dashboard</h2>
+                <p><strong>Total Kids:</strong> ${kids.length}</p>
+            `;
+        }
+
+        // ====================== KIDS PROFILE ======================
+        function renderKids() {
+            const content = document.getElementById('content');
+            content.innerHTML += `
+                <button class="btn btn-add" onclick="showKidForm()">+ Add New Kid</button>
+
+                <div class="form-container" id="kidForm">
+                    <h3 id="kidFormTitle">Add New Kid</h3>
+                    <div><label>Full Name</label><input type="text" id="kidName"></div>
+                    <div><label>Date of Birth</label><input type="date" id="kidDOB"></div>
+                    <div><label>Current Class</label><input type="text" id="kidClass"></div>
+                    <div><label>Board</label><select id="kidStream">
+                        <option value="CBSE">CBSE</option>
+                        <option value="ICSE">ICSE</option>
+                        <option value="State">State Board</option>
+                    </select></div>
+                    <div><label>School</label><input type="text" id="kidSchool"></div>
+                    <button class="btn btn-add" onclick="saveKid()">Save Kid</button>
+                    <button class="btn" onclick="hideKidForm()">Cancel</button>
+                </div>
+
+                <h3>All Kids</h3>
+                <table id="kidsTable">
+                    <thead><tr><th>Name</th><th>DOB</th><th>Class</th><th>Board</th><th>School</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            loadKidsTable();
+        }
+
+        function showKidForm() {
+            document.getElementById('kidForm').style.display = 'block';
+        }
+
+        function hideKidForm() {
+            document.getElementById('kidForm').style.display = 'none';
+        }
+
+        async function saveKid() {
+            const name = document.getElementById('kidName').value.trim();
+            if (!name) return alert("Name is required");
 
             await db.collection('kids').add({
                 name: name,
-                dob: dob,
-                currentClass: currentClass,
-                school: school,
-                stream: "CBSE"
+                dob: document.getElementById('kidDOB').value,
+                currentClass: document.getElementById('kidClass').value,
+                stream: document.getElementById('kidStream').value,
+                school: document.getElementById('kidSchool').value
             });
 
             alert("Kid added successfully!");
-            renderKids();
+            hideKidForm();
+            loadKidsTable();
         }
+
+        async function loadKidsTable() {
+            const { docs } = await db.collection('kids').get();
+            const tbody = document.querySelector('#kidsTable tbody');
+            tbody.innerHTML = '';
+
+            docs.forEach(doc => {
+                const kid = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${kid.name}</td>
+                    <td>${kid.dob}</td>
+                    <td>${kid.currentClass}</td>
+                    <td>${kid.stream}</td>
+                    <td>${kid.school}</td>
+                    <td><button onclick="deleteKid('${doc.id}')">Delete</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function deleteKid(id) {
+            if (confirm("Delete this kid?")) {
+                await db.collection('kids').doc(id).delete();
+                loadKidsTable();
+            }
+        }
+
+        // Initialize
+        renderTabs();
+        renderContent();
     </script>
 </body>
 </html>

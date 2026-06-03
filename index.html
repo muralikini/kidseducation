@@ -895,6 +895,132 @@
         function renderExams() { document.getElementById('content').innerHTML += `<p>Full Academic Performance module is ready.</p>`; }
         function renderJournal() { document.getElementById('content').innerHTML += `<p>Full Activities Journal module is ready.</p>`; }
         // ====================== DASHBOARD ======================
+
+        // ====================== ADMIN PANEL ======================
+        function renderAdminPanel() {
+            const content = document.getElementById('content');
+            content.innerHTML += `
+                <button class="btn btn-add" onclick="showUserForm()">+ Create New User</button>
+
+                <div class="form-container" id="userForm">
+                    <h3 id="userFormTitle">Create New User</h3>
+                    <div class="form-group"><label>Username</label><input type="text" id="newUsername"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="newPassword"></div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="newRole">
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-buttons">
+                        <button class="btn btn-save" onclick="saveUser()">Save User</button>
+                        <button class="btn btn-cancel" onclick="hideUserForm()">Cancel</button>
+                    </div>
+                </div>
+
+                <h3>All Users</h3>
+                <table id="usersTable">
+                    <thead><tr><th>Username</th><th>Role</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            loadUsersTable();
+        }
+
+        function showUserForm(user = null) {
+            document.getElementById('userForm').style.display = 'block';
+            editingUserId = user ? user.id : null;
+            document.getElementById('userFormTitle').textContent = user ? "Edit User" : "Create New User";
+
+            if (user) {
+                document.getElementById('newUsername').value = user.username;
+                document.getElementById('newRole').value = user.role;
+                document.getElementById('newPassword').value = ""; // Don't show existing password
+            } else {
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('newRole').value = 'user';
+            }
+        }
+
+        function hideUserForm() {
+            document.getElementById('userForm').style.display = 'none';
+        }
+
+        async function saveUser() {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+            const role = document.getElementById('newRole').value;
+
+            if (!username || (!editingUserId && !password)) {
+                return alert("Username and Password are required");
+            }
+
+            const userData = { username, role };
+
+            if (editingUserId) {
+                if (password) userData.password = password;
+                await db.collection('users').doc(editingUserId).update(userData);
+            } else {
+                userData.password = password;
+                await db.collection('users').add(userData);
+            }
+
+            alert("User saved successfully!");
+            hideUserForm();
+            loadUsersTable();
+        }
+
+        async function loadUsersTable() {
+            const { docs } = await db.collection('users').get();
+            const tbody = document.querySelector('#usersTable tbody');
+            tbody.innerHTML = '';
+
+            docs.forEach(doc => {
+                const user = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.role}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editUser('${doc.id}')">Edit</button>
+                        ${user.username !== 'admin' ? `<button class="btn btn-delete" onclick="deleteUser('${doc.id}')">Delete</button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function editUser(id) {
+            db.collection('users').doc(id).get().then(doc => {
+                if (doc.exists) {
+                    showUserForm({ id: doc.id, ...doc.data() });
+                }
+            });
+        }
+
+        async function deleteUser(id) {
+            if (confirm("Delete this user?")) {
+                await db.collection('users').doc(id).delete();
+                loadUsersTable();
+            }
+        }
+
+        // Initialize Default Admin (Run once)
+        async function initDefaultAdmin() {
+            const adminSnap = await db.collection('users').where('username', '==', 'admin').get();
+            if (adminSnap.empty) {
+                await db.collection('users').add({
+                    username: 'admin',
+                    password: 'admin123',
+                    role: 'admin'
+                });
+            }
+        }
+        
+        // ====================== ADMIN PANEL ======================
+        
         // Initialize
         renderTabs();
         renderContent();

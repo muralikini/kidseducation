@@ -169,7 +169,7 @@
             else if (currentTab === 'kids') renderKids();
             else if (currentTab === 'expenses') renderExpenses();
             else if (currentTab === 'exams') renderExams();
-            else content.innerHTML += `<p>Module under development...</p>`;
+            else if (currentTab === 'journal') renderJournal();
         }
 
         function renderDashboard() {
@@ -667,6 +667,154 @@
         }
         // ====================== ACADEMIC PERFORMANCE (FULLY FUNCTIONAL) ======================
 
+        // ====================== ACTIVITIES JOURNAL ======================
+        function renderJournal() {
+            const content = document.getElementById('content');
+            content.innerHTML += `
+                <button class="btn btn-add" onclick="showJournalForm()">+ Add New Activity</button>
+
+                <div class="form-container" id="journalForm">
+                    <h3 id="journalFormTitle">Add Activity / Achievement</h3>
+                    
+                    <div class="form-group">
+                        <label>Child</label>
+                        <select id="journalKidId"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="journalDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="journalCategory">
+                            <option value="Sports">Sports</option>
+                            <option value="Academics">Academics</option>
+                            <option value="Arts">Arts & Culture</option>
+                            <option value="Music">Music</option>
+                            <option value="Dance">Dance</option>
+                            <option value="Science">Science & Technology</option>
+                            <option value="Community">Community Service</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Activity / Achievement Title</label>
+                        <input type="text" id="journalTitle" placeholder="e.g., Won School Cricket Match">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="journalDesc" placeholder="Write details about the activity..."></textarea>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button class="btn btn-save" onclick="saveJournal()">Save Entry</button>
+                        <button class="btn btn-cancel" onclick="hideJournalForm()">Cancel</button>
+                    </div>
+                </div>
+
+                <h3>All Activities & Achievements</h3>
+                <table id="journalTable">
+                    <thead><tr><th>Child</th><th>Date</th><th>Category</th><th>Activity</th><th>Description</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            loadKidsForJournalDropdown();
+            loadJournalTable();
+        }
+
+        async function loadKidsForJournalDropdown() {
+            const { docs } = await db.collection('kids').get();
+            const select = document.getElementById('journalKidId');
+            select.innerHTML = '<option value="">-- Select Child --</option>';
+            docs.forEach(doc => {
+                const kid = doc.data();
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.textContent = kid.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function showJournalForm(entry = null) {
+            document.getElementById('journalForm').style.display = 'block';
+            editingJournalId = entry ? entry.id : null;
+            document.getElementById('journalFormTitle').textContent = entry ? "Edit Activity" : "Add New Activity";
+
+            if (entry) {
+                document.getElementById('journalKidId').value = entry.kidId || '';
+                document.getElementById('journalDate').value = entry.date || '';
+                document.getElementById('journalCategory').value = entry.category || 'Other';
+                document.getElementById('journalTitle').value = entry.title || '';
+                document.getElementById('journalDesc').value = entry.description || '';
+            }
+        }
+
+        function hideJournalForm() {
+            document.getElementById('journalForm').style.display = 'none';
+        }
+
+        async function saveJournal() {
+            const kidId = document.getElementById('journalKidId').value;
+            if (!kidId) return alert("Please select a child");
+
+            const journalData = {
+                kidId: kidId,
+                kidName: document.getElementById('journalKidId').options[document.getElementById('journalKidId').selectedIndex].text,
+                date: document.getElementById('journalDate').value,
+                category: document.getElementById('journalCategory').value,
+                title: document.getElementById('journalTitle').value.trim(),
+                description: document.getElementById('journalDesc').value.trim()
+            };
+
+            if (editingJournalId) {
+                await db.collection('journals').doc(editingJournalId).update(journalData);
+            } else {
+                await db.collection('journals').add(journalData);
+            }
+
+            alert("Activity saved successfully!");
+            hideJournalForm();
+            loadJournalTable();
+        }
+
+        async function loadJournalTable() {
+            const { docs } = await db.collection('journals').get();
+            const tbody = document.querySelector('#journalTable tbody');
+            tbody.innerHTML = '';
+
+            docs.forEach(doc => {
+                const entry = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.kidName || '-'}</td>
+                    <td>${entry.date || '-'}</td>
+                    <td>${entry.category || '-'}</td>
+                    <td>${entry.title || '-'}</td>
+                    <td>${entry.description ? entry.description.substring(0, 80) + '...' : '-'}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editJournal('${doc.id}')">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteJournal('${doc.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function editJournal(id) {
+            db.collection('journals').doc(id).get().then(doc => {
+                if (doc.exists) {
+                    showJournalForm({ id: doc.id, ...doc.data() });
+                }
+            });
+        }
+
+        async function deleteJournal(id) {
+            if (confirm("Delete this journal entry?")) {
+                await db.collection('journals').doc(id).delete();
+                loadJournalTable();
+            }
+        }
+        // ====================== ACTIVITIES JOURNAL ======================
         // Initialize
         renderTabs();
         renderContent();

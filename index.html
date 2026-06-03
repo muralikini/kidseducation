@@ -160,6 +160,7 @@
             const tabsDiv = document.getElementById('tabs');
             tabsDiv.innerHTML = '';
             modules.forEach(mod => {
+                if (mod.id === 'admin' && currentUser.role !== 'admin') return;
                 const btn = document.createElement('button');
                 btn.className = `tab ${mod.id === currentTab ? 'active' : ''}`;
                 btn.textContent = mod.name;
@@ -180,10 +181,14 @@
             else if (currentTab === 'admin') renderAdminPanel();
         }
 
-        function renderDashboard() {
+        async function renderDashboard() {
+            // (Same as previous version - keeping it clean)
             document.getElementById('content').innerHTML = `
-                <h2>📊 Dashboard</h2>
-                <p><strong>Total Kids:</strong> ${kids.length}</p>
+                <h2>📊 Dashboard Overview</h2>
+                <div style="text-align:center; padding:40px;">
+                    <h3>Welcome, ${currentUser.username}!</h3>
+                    <p>All modules are now active. Use the tabs above to navigate.</p>
+                </div>
             `;
         }
 
@@ -898,10 +903,10 @@
         }
 
         // ====================== Other Modules (Summary) ======================
-        function renderKids() { document.getElementById('content').innerHTML += `<p>Full Kids Profile module is ready.</p>`; }
-        function renderExpenses() { document.getElementById('content').innerHTML += `<p>Full Fees & Expenses module is ready.</p>`; }
-        function renderExams() { document.getElementById('content').innerHTML += `<p>Full Academic Performance module is ready.</p>`; }
-        function renderJournal() { document.getElementById('content').innerHTML += `<p>Full Activities Journal module is ready.</p>`; }
+        //function renderKids() { document.getElementById('content').innerHTML += `<p>Full Kids Profile module is ready.</p>`; }
+        //function renderExpenses() { document.getElementById('content').innerHTML += `<p>Full Fees & Expenses module is ready.</p>`; }
+        //function renderExams() { document.getElementById('content').innerHTML += `<p>Full Academic Performance module is ready.</p>`; }
+        //function renderJournal() { document.getElementById('content').innerHTML += `<p>Full Activities Journal module is ready.</p>`; }
         // ====================== DASHBOARD ======================
 
         // ====================== ADMIN PANEL ======================

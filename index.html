@@ -4,35 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📚 Kids Education Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f2f5; }
-        .login-box { max-width: 400px; margin: 100px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; }
+        .login-box { max-width: 420px; margin: 100px auto; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
         button { width: 100%; padding: 14px; background: #1e40af; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+        .main { display: none; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="login-box">
+    <!-- LOGIN -->
+    <div class="login-box" id="loginScreen">
         <h1>📚 Kids Education Manager</h1>
         <h2>Login</h2>
         <input type="text" id="username" value="admin" placeholder="Username"><br>
         <input type="password" id="password" value="admin123" placeholder="Password"><br><br>
         <button onclick="login()">Login</button>
-        <p id="error" style="color:red; margin-top:10px;"></p>
+        <p id="errorMsg" style="color:red; margin-top:15px;"></p>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="main" id="mainApp">
+        <h1>Welcome to Kids Education Manager</h1>
+        <p>✅ Supabase Connected</p>
+        <button onclick="logout()">Logout</button>
     </div>
 
     <script>
-        function login() {
+        // Supabase Config
+        const SUPABASE_URL = 'https://dbitafgrdlzwhyoqofwq.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_aU-605gJnM8-MGtqKNlEtQ_fOG_ZsOB';
+
+        let supabaseClient = null;
+
+        async function initSupabase() {
+            try {
+                supabaseClient = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log("✅ Supabase initialized");
+                return true;
+            } catch(e) {
+                console.error("Supabase init failed", e);
+                return false;
+            }
+        }
+
+        async function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
             if (username === "admin" && password === "admin123") {
-                alert("✅ Login Successful!\n\nWelcome to Kids Education Manager");
-                // You can expand this later
+                const success = await initSupabase();
+                if (success) {
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('mainApp').style.display = 'block';
+                } else {
+                    alert("Login successful but Supabase connection failed.");
+                }
             } else {
-                document.getElementById('error').textContent = "❌ Invalid username or password";
+                document.getElementById('errorMsg').textContent = "Invalid username or password";
             }
+        }
+
+        function logout() {
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'block';
         }
     </script>
 </body>

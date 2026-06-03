@@ -132,7 +132,7 @@
             `;
         }
 
-        // ====================== KIDS PROFILE ======================
+       // ====================== KIDS PROFILE (with Edit) ======================
         function renderKids() {
             const content = document.getElementById('content');
             content.innerHTML += `
@@ -162,8 +162,16 @@
             loadKidsTable();
         }
 
-        function showKidForm() {
+        function showKidForm(kid = null) {
             document.getElementById('kidForm').style.display = 'block';
+            editingKidId = kid ? kid.id : null;
+            document.getElementById('kidFormTitle').textContent = kid ? "Edit Kid" : "Add New Kid";
+
+            document.getElementById('kidName').value = kid ? kid.name : '';
+            document.getElementById('kidDOB').value = kid ? kid.dob : '';
+            document.getElementById('kidClass').value = kid ? kid.currentClass : '';
+            document.getElementById('kidStream').value = kid ? kid.stream : 'CBSE';
+            document.getElementById('kidSchool').value = kid ? kid.school : '';
         }
 
         function hideKidForm() {
@@ -174,15 +182,21 @@
             const name = document.getElementById('kidName').value.trim();
             if (!name) return alert("Name is required");
 
-            await db.collection('kids').add({
+            const kidData = {
                 name: name,
                 dob: document.getElementById('kidDOB').value,
                 currentClass: document.getElementById('kidClass').value,
                 stream: document.getElementById('kidStream').value,
                 school: document.getElementById('kidSchool').value
-            });
+            };
 
-            alert("Kid added successfully!");
+            if (editingKidId) {
+                await db.collection('kids').doc(editingKidId).update(kidData);
+            } else {
+                await db.collection('kids').add(kidData);
+            }
+
+            alert("Saved successfully!");
             hideKidForm();
             loadKidsTable();
         }
@@ -201,9 +215,20 @@
                     <td>${kid.currentClass}</td>
                     <td>${kid.stream}</td>
                     <td>${kid.school}</td>
-                    <td><button onclick="deleteKid('${doc.id}')">Delete</button></td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editKid('${doc.id}')">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteKid('${doc.id}')">Delete</button>
+                    </td>
                 `;
                 tbody.appendChild(row);
+            });
+        }
+
+        function editKid(id) {
+            db.collection('kids').doc(id).get().then(doc => {
+                if (doc.exists) {
+                    showKidForm({ id: doc.id, ...doc.data() });
+                }
             });
         }
 
@@ -213,7 +238,8 @@
                 loadKidsTable();
             }
         }
-
+        // ====================== KIDS PROFILE (with Edit) ======================
+        
         // Initialize
         renderTabs();
         renderContent();

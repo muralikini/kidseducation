@@ -6,33 +6,47 @@
     <title>📚 Kids Education Manager</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #f0f2f5; }
-        .login-box { max-width: 420px; margin: 80px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; }
-        button { width: 100%; padding: 14px; background: #1e40af; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 8px 0; }
-        .main { display: none; padding: 20px; }
+        :root { --bg: #f8fafc; --card: #ffffff; --text: #1f2937; --border: #e2e8f0; }
+        body.dark { --bg: #0f172a; --card: #1e2937; --text: #e2e8f0; --border: #334155; }
+        body { font-family: Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+        header { background: #1e40af; color: white; padding: 15px; text-align: center; position: relative; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 20px; }
+        .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; }
+        .tab { padding: 12px 24px; background: #e2e8f0; border: none; cursor: pointer; border-radius: 8px 8px 0 0; font-weight: bold; }
+        body.dark .tab { background: #334155; color: #cbd5e1; }
+        .tab.active { background: #1e40af; color: white; }
+        .content { background: var(--card); padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th, td { padding: 12px; border: 1px solid var(--border); text-align: left; }
+        th { background: #f1f5f9; }
+        body.dark th { background: #334155; }
+        .btn { padding: 10px 18px; margin: 5px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-add { background: #1e40af; color: white; }
     </style>
 </head>
 <body>
 
     <!-- LOGIN -->
-    <div class="login-box" id="loginScreen">
+    <div class="login-box" id="loginScreen" style="max-width: 420px; margin: 100px auto; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center;">
         <h1>📚 Kids Education Manager</h1>
         <h2>Login</h2>
-        <input type="text" id="username" value="admin" placeholder="Username"><br>
+        <input type="text" id="username" value="admin" placeholder="Username"><br><br>
         <input type="password" id="password" value="admin123" placeholder="Password"><br><br>
-        <button onclick="login()">Login</button>
+        <button onclick="login()" style="padding:14px 40px; background:#1e40af; color:white; border:none; border-radius:6px; cursor:pointer;">Login</button>
         <p id="errorMsg" style="color:red; margin-top:15px;"></p>
     </div>
 
     <!-- MAIN APP -->
-    <div class="main" id="mainApp">
-        <h1>Welcome to Kids Education Manager</h1>
-        <button onclick="logout()">Logout</button>
-        <div class="tabs" id="tabs"></div>
-        <div id="content"></div>
+    <div id="mainApp" style="display:none;">
+        <header>
+            <h1>📚 Kids Education Manager</h1>
+            <button onclick="logout()" style="position:absolute; top:15px; right:20px; padding:8px 16px; background:#ef4444; color:white; border:none; border-radius:5px;">Logout</button>
+        </header>
+
+        <div class="container">
+            <div class="tabs" id="tabs"></div>
+            <div class="content" id="content"></div>
+        </div>
     </div>
 
     <script>
@@ -99,24 +113,16 @@
             content.innerHTML = `<h2>${modules.find(m => m.id === currentTab).name}</h2>`;
 
             if (currentTab === 'dashboard') renderDashboard();
-            else if (currentTab === 'kids') renderKids();
-            else if (currentTab === 'expenses') renderExpenses();
-            else if (currentTab === 'exams') renderExams();
-            else if (currentTab === 'journal') renderJournal();
+            else content.innerHTML += `<p>${modules.find(m => m.id === currentTab).name} module is ready for full implementation.</p>`;
         }
 
         function renderDashboard() {
             document.getElementById('content').innerHTML = `
                 <h2>📊 Dashboard</h2>
-                <p>Total Kids: ${kids.length}</p>
-                <p>Total Expenses: ₹${expenses.reduce((sum, e) => sum + (e.amount||0), 0)}</p>
+                <p><strong>Total Kids:</strong> ${kids.length}</p>
+                <p><strong>Total Expenses:</strong> ₹${expenses.reduce((sum, e) => sum + (e.amount||0), 0)}</p>
             `;
         }
-
-        function renderKids() { document.getElementById('content').innerHTML += `<p>Kids Profile - Full module ready for expansion</p>`; }
-        function renderExpenses() { document.getElementById('content').innerHTML += `<p>Fees & Expenses - Full module ready</p>`; }
-        function renderExams() { document.getElementById('content').innerHTML += `<p>Academic Performance - Full module ready</p>`; }
-        function renderJournal() { document.getElementById('content').innerHTML += `<p>Activities Journal - Full module ready</p>`; }
 
         // Initialize
         renderTabs();

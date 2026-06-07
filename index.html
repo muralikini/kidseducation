@@ -3,146 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔐 Family Vault</title>
+    <title>📚 Kids Education Manager</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --bg: #f8fafc; --card: #ffffff; --text: #1f2937; --border: #e2e8f0; --primary: #1e40af; }
-        body.dark { --bg: #0f172a; --card: #1e2937; --text: #e2e8f0; --border: #334155; --primary: #3b82f6; }
-        body { font-family: Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
-       header { 
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1f2937;
+            --border: #e2e8f0;
+            --primary: #1e40af;
+        }
+        body.dark {
+            --bg: #0f172a;
+            --card: #1e2937;
+            --text: #e2e8f0;
+            --border: #334155;
+            --primary: #3b82f6;
+        }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            background: var(--bg); 
+            color: var(--text); 
+            transition: background 0.3s;
+        }
+        header { 
             background: var(--primary); 
             color: white; 
-            padding: 15px 20px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            position: relative;
+            padding: 15px; 
+            text-align: center; 
+            position: relative; 
         }
-
-        .header-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.4rem;
-            font-weight: bold;
+        .container { max-width: 1400px; margin: 20px auto; padding: 20px; }
+        .tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px; }
+        .tab { 
+            padding: 12px 24px; 
+            background: #e2e8f0; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 8px 8px 0 0; 
+            font-weight: bold; 
         }
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-dark { background: rgba(255,255,255,0.2); color: white; }
-        .btn-danger { background: #ef4444; color: white; }
-
-        .container { max-width: 1400px; margin: 0 auto; padding: 15px; }
-        
-       /* Responsive Tabs */
-        .tabs { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 10px; }
-        .tab { padding: 10px 20px; background: #e2e8f0; border: none; border-radius: 9999px; white-space: nowrap; font-weight: bold; }
         body.dark .tab { background: #334155; color: #cbd5e1; }
         .tab.active { background: var(--primary); color: white; }
+        .content { 
+            background: var(--card); 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        }
 
-        .content { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-
-       /* Improved Form Layout */
-        .form-grid { 
+        .dashboard-grid { 
             display: grid; 
-            grid-template-columns: 1fr; 
-            gap: 18px; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 20px; 
+            margin: 25px 0; 
         }
-        @media (min-width: 768px) {
-            .form-grid { grid-template-columns: 1fr 1fr; }
+        .card { 
+            background: var(--card); 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
+            text-align: center; 
         }
 
+        .form-container {
+            background: var(--card);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin: 20px 0;
+            display: none;
+        }
         .form-group { margin-bottom: 18px; }
         .form-group label { 
             display: block; 
             margin-bottom: 6px; 
             font-weight: 600; 
         }
-        .form-group input, .form-group select { 
-            width: 100%; 
-            padding: 14px; 
-            border: 1px solid var(--border); 
-            border-radius: 8px; 
-            font-size: 16px; 
-            box-sizing: border-box;
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
         }
+        .form-buttons { display: flex; gap: 12px; margin-top: 25px; }
 
-        .full-width { grid-column: 1 / -1; }
-
-        .photo-section { margin: 20px 0; text-align: center; }
-        .photo-preview { max-width: 100%; border-radius: 12px; margin: 10px 0; }
-
-        /*.btn { padding: 14px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }*/
-        .btn { 
-            padding: 14px 24px; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: bold; 
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
         }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-danger { background: #ef4444; color: white; }
+        .btn-add, .btn-save { background: var(--primary); color: white; }
+        .btn-edit { background: #3b82f6; color: white; }
+        .btn-delete { background: #ef4444; color: white; }
+        .btn-cancel { background: #6b7280; color: white; }
 
-        table { width: 100%; border-collapse: collapse; margin: 15px 0; overflow-x: auto; display: block; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
         th, td { padding: 12px; border: 1px solid var(--border); text-align: left; }
         th { background: #f1f5f9; }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 15px;
-        }
-        .modal-content {
-            background: var(--card);
-            padding: 20px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 700px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
+        body.dark th { background: #334155; }
     </style>
 </head>
-<body onload="loadDarkMode()">
-<!-- LOGIN -->
-    <div id="loginScreen" style="max-width: 420px; margin: 80px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center;">
-        <h1>🔐 Family Vault</h1>
-        <h2>Family Information Manager</h2>
+<body>
+
+    <!-- LOGIN -->
+    <div class="login-box" id="loginScreen" style="max-width: 420px; margin: 100px auto; padding: 50px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); text-align: center;">
+        <h1>📚 Kids Education Manager</h1>
+        <h2>Login</h2>
         <input type="text" id="username" value="admin" placeholder="Username"><br><br>
         <input type="password" id="password" value="admin123" placeholder="Password"><br><br>
-        <button onclick="login()" class="btn" style="background:var(--primary); color:white; width:100%; padding:14px;">Login</button>
-        <p id="errorMsg" style="color:red; margin-top:10px;"></p>
+        <button onclick="login()" style="padding:14px 40px; background:#1e40af; color:white; border:none; border-radius:6px; cursor:pointer;">Login</button>
+        <p id="errorMsg" style="color:red; margin-top:15px;"></p>
     </div>
 
     <!-- MAIN APP -->
     <div id="mainApp" style="display:none;">
         <header>
-            <div class="header-title">
-                🔐 Family Vault
-            </div>
-            <div class="header-actions">
-                <button onclick="toggleDarkMode()" class="btn btn-dark">🌙</button>
-                <button onclick="logout()" class="btn btn-danger">Logout</button>
-            </div>
+            <h1>📚 Kids Education Manager</h1>
+            <button onclick="toggleDarkMode()" style="position:absolute; top:15px; right:90px; padding:8px 16px; background:#64748b; color:white; border:none; border-radius:5px;">🌙 Dark Mode</button>
+            <button onclick="logout()" style="position:absolute; top:15px; right:20px; padding:8px 16px; background:#ef4444; color:white; border:none; border-radius:5px;">Logout</button>
         </header>
 
         <div class="container">
@@ -151,59 +136,58 @@
         </div>
     </div>
 
-    <!-- DOCUMENT VIEWER MODAL -->
-    <div id="docViewerModal" class="modal">
-        <div class="modal-content">
-            <h2 id="modalDocTitle"></h2>
-            <div id="modalDocDetails"></div>
-            <div id="modalPhotos" style="margin:20px 0;"></div>
-            <button class="btn btn-danger" onclick="closeModal()">Close</button>
-        </div>
-    </div>
-
     <script>
-        // ================== YOUR FIREBASE CONFIG ==================
+        // ================== FIREBASE CONFIG ==================
         const firebaseConfig = {
-          apiKey: "AIzaSyAJgTIZrQJTyqEI1YnAs2TEWZcPK45lGWM",
-          authDomain: "family-vault-3c73e.firebaseapp.com",
-          projectId: "family-vault-3c73e",
-          storageBucket: "family-vault-3c73e.firebasestorage.app",
-          messagingSenderId: "705062533139",
-          appId: "1:705062533139:web:011cb0290a51b14ed867e6"
+          apiKey: "AIzaSyApHwBPmNIsuAJHfz7nM40t4cHL_u481P8",
+          authDomain: "kids-education-manager.firebaseapp.com",
+          projectId: "kids-education-manager",
+          storageBucket: "kids-education-manager.firebasestorage.app",
+          messagingSenderId: "473594316250",
+          appId: "1:473594316250:web:17165d047e267abc6a6ce3"
         };
 
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const storage = firebase.storage();
 
         let currentUser = null;
         let currentTab = 'dashboard';
 
+        let kids = [];
+
         const modules = [
             { id: 'dashboard', name: 'Dashboard' },
-            { id: 'family', name: 'Family Members' },
-            { id: 'documents', name: 'Documents' },
+            { id: 'kids', name: 'Kids Profile' },
+            { id: 'expenses', name: 'Fees & Expenses' },
+            { id: 'exams', name: 'Academic Performance' },
+            { id: 'journal', name: 'Activities Journal' },
             { id: 'admin', name: 'Admin Panel' }
         ];
 
+        // Dark Mode
         function toggleDarkMode() {
             document.body.classList.toggle('dark');
             localStorage.setItem('darkMode', document.body.classList.contains('dark'));
         }
 
+        // Load saved dark mode preference
         function loadDarkMode() {
-            if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark');
+            }
         }
 
         async function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
 
-            const snap = await db.collection('users').where('username', '==', username).get();
-            if (!snap.empty) {
-                const userData = snap.docs[0].data();
+            const userSnap = await db.collection('users').where('username', '==', username).get();
+            
+            if (!userSnap.empty) {
+                const userDoc = userSnap.docs[0];
+                const userData = userDoc.data();
                 if (userData.password === password) {
-                    currentUser = { id: snap.docs[0].id, ...userData };
+                    currentUser = { id: userDoc.id, ...userData };
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('mainApp').style.display = 'block';
                     renderTabs();
@@ -211,23 +195,27 @@
                     return;
                 }
             }
-            document.getElementById('errorMsg').textContent = "Invalid credentials";
+            document.getElementById('errorMsg').textContent = "Invalid username or password";
         }
 
         function logout() {
-            if (confirm("Logout?")) location.reload();
+            if (confirm("Logout?")) {
+                currentUser = null;
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'block';
+            }
         }
 
         function renderTabs() {
-            const div = document.getElementById('tabs');
-            div.innerHTML = '';
-            modules.forEach(m => {
-                if (m.id === 'admin' && currentUser.role !== 'admin') return;
+            const tabsDiv = document.getElementById('tabs');
+            tabsDiv.innerHTML = '';
+            modules.forEach(mod => {
+                if (mod.id === 'admin' && currentUser.role !== 'admin') return;
                 const btn = document.createElement('button');
-                btn.className = `tab ${m.id === currentTab ? 'active' : ''}`;
-                btn.textContent = m.name;
-                btn.onclick = () => { currentTab = m.id; renderTabs(); renderContent(); };
-                div.appendChild(btn);
+                btn.className = `tab ${mod.id === currentTab ? 'active' : ''}`;
+                btn.textContent = mod.name;
+                btn.onclick = () => { currentTab = mod.id; renderTabs(); renderContent(); };
+                tabsDiv.appendChild(btn);
             });
         }
 
@@ -236,109 +224,761 @@
             content.innerHTML = `<h2>${modules.find(m => m.id === currentTab).name}</h2>`;
 
             if (currentTab === 'dashboard') renderDashboard();
-            else if (currentTab === 'family') renderFamily();
-            else if (currentTab === 'documents') renderDocuments();
+            else if (currentTab === 'kids') renderKids();
+            else if (currentTab === 'expenses') renderExpenses();
+            else if (currentTab === 'exams') renderExams();
+            else if (currentTab === 'journal') renderJournal();
             else if (currentTab === 'admin') renderAdminPanel();
         }
 
-        // ====================== DASHBOARD (FULLY FUNCTIONAL) ======================
         async function renderDashboard() {
+            // (Same as previous version - keeping it clean)
+            document.getElementById('content').innerHTML = `
+                <h2>📊 Dashboard Overview</h2>
+                <div style="text-align:center; padding:40px;">
+                    <h3>Welcome, ${currentUser.username}!</h3>
+                    <p>All modules are now active. Use the tabs above to navigate.</p>
+                </div>
+            `;
+        }
+
+       // ====================== KIDS PROFILE ======================
+        function renderKids() {
             const content = document.getElementById('content');
-
-            const familySnap = await db.collection('family').get();
-            const docSnap = await db.collection('documents').get();
-
-            let totalFamily = familySnap.docs.length;
-            let totalDocs = docSnap.docs.length;
-
             content.innerHTML += `
-                <h2>📊 Family Vault Overview</h2>
-                
-                <div class="dashboard-grid">
-                    <div class="card">
-                        <h3>👨‍👩‍👧‍👦 Family Members</h3>
-                        <div class="value">${totalFamily}</div>
+                <button class="btn btn-add" onclick="showKidForm()">+ Add New Kid</button>
+
+                <div class="form-container" id="kidForm">
+                    <h3 id="kidFormTitle">Add New Kid</h3>
+                    
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="kidName" placeholder="Enter full name">
                     </div>
-                    <div class="card">
-                        <h3>📄 Total Documents</h3>
-                        <div class="value">${totalDocs}</div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" id="kidDOB">
                     </div>
-                    <div class="card">
-                        <h3>🔐 Secure Records</h3>
-                        <div class="value">${totalFamily + totalDocs}</div>
+                    <div class="form-group">
+                        <label>Current Class / Grade</label>
+                        <input type="text" id="kidClass" placeholder="e.g., 8th Grade">
                     </div>
-                    <div class="card">
-                        <h3>👤 Logged in as</h3>
-                        <div class="value">${currentUser.username}</div>
-                        <small>Role: ${currentUser.role}</small>
+                    <div class="form-group">
+                        <label>Board / Stream</label>
+                        <select id="kidStream">
+                            <option value="CBSE">CBSE</option>
+                            <option value="ICSE">ICSE</option>
+                            <option value="State">State Board</option>
+                             <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>School / College Name</label>
+                        <input type="text" id="kidSchool" placeholder="Enter school name">
+                    </div>
+
+                    <div class="form-buttons">
+                        <button class="btn btn-save" onclick="saveKid()">Save Kid</button>
+                        <button class="btn btn-cancel" onclick="hideKidForm()">Cancel</button>
                     </div>
                 </div>
 
-                <h3>Recent Family Members</h3>
-                <table id="recentFamilyTable">
-                    <thead><tr><th>Name</th><th>Relation</th><th>Phone</th></tr></thead>
+                <h3>All Kids</h3>
+                <table id="kidsTable">
+                    <thead><tr><th>Name</th><th>DOB</th><th>Class</th><th>Board</th><th>School</th><th>Actions</th></tr></thead>
                     <tbody></tbody>
                 </table>
+            `;
+            loadKidsTable();
+        }
 
-                <h3>Recent Documents</h3>
-                <table id="recentDocsTable">
-                    <thead><tr><th>Type</th><th>Number</th><th>Issued To</th></tr></thead>
+        function showKidForm(kid = null) {
+            document.getElementById('kidForm').style.display = 'block';
+            editingKidId = kid ? kid.id : null;
+            document.getElementById('kidFormTitle').textContent = kid ? "Edit Kid" : "Add New Kid";
+
+            document.getElementById('kidName').value = kid ? kid.name : '';
+            document.getElementById('kidDOB').value = kid ? kid.dob : '';
+            document.getElementById('kidClass').value = kid ? kid.currentClass : '';
+            document.getElementById('kidStream').value = kid ? kid.stream : 'CBSE';
+            document.getElementById('kidSchool').value = kid ? kid.school : '';
+        }
+
+        function hideKidForm() {
+            document.getElementById('kidForm').style.display = 'none';
+        }
+
+        async function saveKid() {
+            const name = document.getElementById('kidName').value.trim();
+            if (!name) return alert("Full Name is required");
+
+            const kidData = {
+                name: name,
+                dob: document.getElementById('kidDOB').value,
+                currentClass: document.getElementById('kidClass').value,
+                stream: document.getElementById('kidStream').value,
+                school: document.getElementById('kidSchool').value
+            };
+
+            if (editingKidId) {
+                await db.collection('kids').doc(editingKidId).update(kidData);
+            } else {
+                await db.collection('kids').add(kidData);
+            }
+
+            alert("Saved successfully!");
+            hideKidForm();
+            loadKidsTable();
+        }
+
+        async function loadKidsTable() {
+            const { docs } = await db.collection('kids').get();
+            const tbody = document.querySelector('#kidsTable tbody');
+            tbody.innerHTML = '';
+
+            docs.forEach(doc => {
+                const kid = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${kid.name}</td>
+                    <td>${kid.dob || '-'}</td>
+                    <td>${kid.currentClass || '-'}</td>
+                    <td>${kid.stream || '-'}</td>
+                    <td>${kid.school || '-'}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editKid('${doc.id}')">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteKid('${doc.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function editKid(id) {
+            db.collection('kids').doc(id).get().then(doc => {
+                if (doc.exists) {
+                    showKidForm({ id: doc.id, ...doc.data() });
+                }
+            });
+        }
+
+        async function deleteKid(id) {
+            if (confirm("Delete this kid and all related data?")) {
+                await db.collection('kids').doc(id).delete();
+                loadKidsTable();
+            }
+        }
+        // ====================== KIDS PROFILE (with Edit) ======================
+        
+        // ====================== FEES & EXPENSES (FULLY FUNCTIONAL) ======================
+        function renderExpenses() {
+            const content = document.getElementById('content');
+            content.innerHTML += `
+                <button class="btn btn-add" onclick="showExpenseForm()">+ Add New Expense</button>
+
+                <div class="form-container" id="expenseForm">
+                    <h3 id="expenseFormTitle">Add New Expense</h3>
+                    
+                    <div class="form-group">
+                        <label>Child</label>
+                        <select id="expKidId"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Academic Year</label>
+                        <select id="expYear"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Expense Type</label>
+                        <select id="expType">
+                            <option value="School Fees">School Fees</option>
+                            <option value="Books & Stationery">Books & Stationery</option>
+                            <option value="Uniform">Uniform</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Tuition">Tuition / Coaching</option>
+                            <option value="Exam Fees">Exam Fees</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount (₹)</label>
+                        <input type="number" id="expAmount" placeholder="Enter amount">
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Date</label>
+                        <input type="date" id="expDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes (Optional)</label>
+                        <input type="text" id="expNotes" placeholder="Any remarks">
+                    </div>
+
+                    <div class="form-buttons">
+                        <button class="btn btn-save" onclick="saveExpense()">Save Expense</button>
+                        <button class="btn btn-cancel" onclick="hideExpenseForm()">Cancel</button>
+                    </div>
+                </div>
+
+                <h3>All Expenses</h3>
+                <table id="expensesTable">
+                    <thead><tr><th>Child</th><th>Year</th><th>Type</th><th>Amount</th><th>Date</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            loadKidsForDropdown();
+            loadExpensesTable();
+        }
+
+        async function loadKidsForDropdown() {
+            const { docs } = await db.collection('kids').get();
+            const select = document.getElementById('expKidId');
+            select.innerHTML = '<option value="">-- Select Child --</option>';
+            docs.forEach(doc => {
+                const kid = doc.data();
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.textContent = kid.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function populateAcademicYears() {
+            const select = document.getElementById('expYear');
+            select.innerHTML = '';
+            const currentYear = new Date().getFullYear();
+            for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                select.appendChild(opt);
+            }
+        }
+
+        function showExpenseForm(expense = null) {
+            document.getElementById('expenseForm').style.display = 'block';
+            editingExpenseId = expense ? expense.id : null;
+            document.getElementById('expenseFormTitle').textContent = expense ? "Edit Expense" : "Add New Expense";
+
+            populateAcademicYears();
+
+            if (expense) {
+                document.getElementById('expKidId').value = expense.kidId || '';
+                document.getElementById('expYear').value = expense.year || '';
+                document.getElementById('expType').value = expense.type || '';
+                document.getElementById('expAmount').value = expense.amount || '';
+                document.getElementById('expDate').value = expense.date || '';
+                document.getElementById('expNotes').value = expense.notes || '';
+            }
+        }
+
+        function hideExpenseForm() {
+            document.getElementById('expenseForm').style.display = 'none';
+        }
+
+        async function saveExpense() {
+            const kidId = document.getElementById('expKidId').value;
+            if (!kidId) return alert("Please select a child");
+
+            const expenseData = {
+                kidId: kidId,
+                kidName: document.getElementById('expKidId').options[document.getElementById('expKidId').selectedIndex].text,
+                year: document.getElementById('expYear').value,
+                type: document.getElementById('expType').value,
+                amount: parseFloat(document.getElementById('expAmount').value) || 0,
+                date: document.getElementById('expDate').value,
+                notes: document.getElementById('expNotes').value
+            };
+
+            if (editingExpenseId) {
+                await db.collection('expenses').doc(editingExpenseId).update(expenseData);
+            } else {
+                await db.collection('expenses').add(expenseData);
+            }
+
+            alert("Expense saved successfully!");
+            hideExpenseForm();
+            loadExpensesTable();
+        }
+
+        async function loadExpensesTable() {
+            const { docs } = await db.collection('expenses').get();
+            const tbody = document.querySelector('#expensesTable tbody');
+            tbody.innerHTML = '';
+
+            let total = 0;
+
+            docs.forEach(doc => {
+                const exp = doc.data();
+                total += exp.amount || 0;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${exp.kidName || '-'}</td>
+                    <td>${exp.year || '-'}</td>
+                    <td>${exp.type || '-'}</td>
+                    <td>₹${exp.amount || 0}</td>
+                    <td>${exp.date || '-'}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editExpense('${doc.id}')">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteExpense('${doc.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Add total row
+            const totalRow = document.createElement('tr');
+            totalRow.style.fontWeight = 'bold';
+            totalRow.innerHTML = `<td colspan="3">Total Expenses</td><td>₹${total}</td><td colspan="2"></td>`;
+            tbody.appendChild(totalRow);
+        }
+
+        function editExpense(id) {
+            db.collection('expenses').doc(id).get().then(doc => {
+                if (doc.exists) {
+                    showExpenseForm({ id: doc.id, ...doc.data() });
+                }
+            });
+        }
+
+        async function deleteExpense(id) {
+            if (confirm("Delete this expense?")) {
+                await db.collection('expenses').doc(id).delete();
+                loadExpensesTable();
+            }
+        }
+        
+        // ====================== FEES & EXPENSES (FULLY FUNCTIONAL) ======================
+
+        // ====================== ACADEMIC PERFORMANCE (FULLY FUNCTIONAL) ======================
+        function renderExams() {
+            const content = document.getElementById('content');
+            content.innerHTML += `
+                <button class="btn btn-add" onclick="showExamForm()">+ Add Exam Result</button>
+
+                <div class="form-container" id="examForm">
+                    <h3 id="examFormTitle">Add Exam Result</h3>
+                    
+                    <div class="form-group">
+                        <label>Child</label>
+                        <select id="examKidId"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Academic Year</label>
+                        <select id="examYear"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Exam Name</label>
+                        <select id="examName">
+                            <option value="Unit Test 1">Unit Test 1</option>
+                            <option value="Unit Test 2">Unit Test 2</option>
+                            <option value="Mid Term">Mid Term</option>
+                            <option value="Final Exam">Final Exam</option>
+                            <option value="Quarterly">Quarterly</option>
+                            <option value="Half Yearly">Half Yearly</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <input type="text" id="examSubject" placeholder="e.g., Mathematics">
+                    </div>
+                    <div class="form-group">
+                        <label>Marks Obtained</label>
+                        <input type="number" id="marksObtained" placeholder="85">
+                    </div>
+                    <div class="form-group">
+                        <label>Total Marks</label>
+                        <input type="number" id="totalMarks" value="100" placeholder="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Exam Date</label>
+                        <input type="date" id="examDate">
+                    </div>
+
+                    <div class="form-buttons">
+                        <button class="btn btn-save" onclick="saveExam()">Save Result</button>
+                        <button class="btn btn-cancel" onclick="hideExamForm()">Cancel</button>
+                    </div>
+                </div>
+
+                <h3>All Academic Records</h3>
+                <table id="examsTable">
+                    <thead><tr><th>Child</th><th>Year</th><th>Exam</th><th>Subject</th><th>Score</th><th>Percentage</th><th>Date</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            loadKidsForExamDropdown();
+            loadExamsTable();
+        }
+
+        async function loadKidsForExamDropdown() {
+            const { docs } = await db.collection('kids').get();
+            const select = document.getElementById('examKidId');
+            select.innerHTML = '<option value="">-- Select Child --</option>';
+            docs.forEach(doc => {
+                const kid = doc.data();
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.textContent = kid.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function populateExamYears() {
+            const select = document.getElementById('examYear');
+            select.innerHTML = '';
+            const currentYear = new Date().getFullYear();
+            for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                select.appendChild(opt);
+            }
+        }
+
+        function showExamForm(exam = null) {
+            document.getElementById('examForm').style.display = 'block';
+            editingExamId = exam ? exam.id : null;
+            document.getElementById('examFormTitle').textContent = exam ? "Edit Exam Result" : "Add Exam Result";
+
+            populateExamYears();
+
+            if (exam) {
+                document.getElementById('examKidId').value = exam.kidId || '';
+                document.getElementById('examYear').value = exam.year || '';
+                document.getElementById('examName').value = exam.examName || '';
+                document.getElementById('examSubject').value = exam.subject || '';
+                document.getElementById('marksObtained').value = exam.marksObtained || '';
+                document.getElementById('totalMarks').value = exam.totalMarks || 100;
+                document.getElementById('examDate').value = exam.date || '';
+            }
+        }
+
+        function hideExamForm() {
+            document.getElementById('examForm').style.display = 'none';
+        }
+
+        async function saveExam() {
+            const kidId = document.getElementById('examKidId').value;
+            if (!kidId) return alert("Please select a child");
+
+            const marksObtained = parseFloat(document.getElementById('marksObtained').value) || 0;
+            const totalMarks = parseFloat(document.getElementById('totalMarks').value) || 100;
+            const percentage = totalMarks > 0 ? ((marksObtained / totalMarks) * 100).toFixed(2) : 0;
+
+            const examData = {
+                kidId: kidId,
+                kidName: document.getElementById('examKidId').options[document.getElementById('examKidId').selectedIndex].text,
+                year: document.getElementById('examYear').value,
+                examName: document.getElementById('examName').value,
+                subject: document.getElementById('examSubject').value,
+                marksObtained: marksObtained,
+                totalMarks: totalMarks,
+                percentage: parseFloat(percentage),
+                date: document.getElementById('examDate').value
+            };
+
+            if (editingExamId) {
+                await db.collection('exams').doc(editingExamId).update(examData);
+            } else {
+                await db.collection('exams').add(examData);
+            }
+
+            alert("Exam result saved successfully!");
+            hideExamForm();
+            loadExamsTable();
+        }
+
+        async function loadExamsTable() {
+            const { docs } = await db.collection('exams').get();
+            const tbody = document.querySelector('#examsTable tbody');
+            tbody.innerHTML = '';
+
+            docs.forEach(doc => {
+                const exam = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${exam.kidName || '-'}</td>
+                    <td>${exam.year || '-'}</td>
+                    <td>${exam.examName || '-'}</td>
+                    <td>${exam.subject || '-'}</td>
+                    <td>${exam.marksObtained} / ${exam.totalMarks}</td>
+                    <td class="percentage">${exam.percentage}%</td>
+                    <td>${exam.date || '-'}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editExam('${doc.id}')">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteExam('${doc.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function editExam(id) {
+            db.collection('exams').doc(id).get().then(doc => {
+                if (doc.exists) {
+                    showExamForm({ id: doc.id, ...doc.data() });
+                }
+            });
+        }
+
+        async function deleteExam(id) {
+            if (confirm("Delete this exam record?")) {
+                await db.collection('exams').doc(id).delete();
+                loadExamsTable();
+            }
+        }
+        // ====================== ACADEMIC PERFORMANCE (FULLY FUNCTIONAL) ======================
+
+        // ====================== ACTIVITIES JOURNAL ======================
+        function renderJournal() {
+            const content = document.getElementById('content');
+            content.innerHTML += `
+                <button class="btn btn-add" onclick="showJournalForm()">+ Add New Activity</button>
+
+                <div class="form-container" id="journalForm">
+                    <h3 id="journalFormTitle">Add Activity / Achievement</h3>
+                    
+                    <div class="form-group">
+                        <label>Child</label>
+                        <select id="journalKidId"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="journalDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="journalCategory">
+                            <option value="Sports">Sports</option>
+                            <option value="Academics">Academics</option>
+                            <option value="Arts">Arts & Culture</option>
+                            <option value="Music">Music</option>
+                            <option value="Dance">Dance</option>
+                            <option value="Science">Science & Technology</option>
+                            <option value="Community">Community Service</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Activity / Achievement Title</label>
+                        <input type="text" id="journalTitle" placeholder="e.g., Won School Cricket Match">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="journalDesc" placeholder="Write details about the activity..."></textarea>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button class="btn btn-save" onclick="saveJournal()">Save Entry</button>
+                        <button class="btn btn-cancel" onclick="hideJournalForm()">Cancel</button>
+                    </div>
+                </div>
+
+                <h3>All Activities & Achievements</h3>
+                <table id="journalTable">
+                    <thead><tr><th>Child</th><th>Date</th><th>Category</th><th>Activity</th><th>Description</th><th>Actions</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            `;
+            loadKidsForJournalDropdown();
+            loadJournalTable();
+        }
+
+        async function loadKidsForJournalDropdown() {
+            const { docs } = await db.collection('kids').get();
+            const select = document.getElementById('journalKidId');
+            select.innerHTML = '<option value="">-- Select Child --</option>';
+            docs.forEach(doc => {
+                const kid = doc.data();
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.textContent = kid.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function showJournalForm(entry = null) {
+            document.getElementById('journalForm').style.display = 'block';
+            editingJournalId = entry ? entry.id : null;
+            document.getElementById('journalFormTitle').textContent = entry ? "Edit Activity" : "Add New Activity";
+
+            if (entry) {
+                document.getElementById('journalKidId').value = entry.kidId || '';
+                document.getElementById('journalDate').value = entry.date || '';
+                document.getElementById('journalCategory').value = entry.category || 'Other';
+                document.getElementById('journalTitle').value = entry.title || '';
+                document.getElementById('journalDesc').value = entry.description || '';
+            }
+        }
+
+        function hideJournalForm() {
+            document.getElementById('journalForm').style.display = 'none';
+        }
+
+        async function saveJournal() {
+            const kidId = document.getElementById('journalKidId').value;
+            if (!kidId) return alert("Please select a child");
+
+            const journalData = {
+                kidId: kidId,
+                kidName: document.getElementById('journalKidId').options[document.getElementById('journalKidId').selectedIndex].text,
+                date: document.getElementById('journalDate').value,
+                category: document.getElementById('journalCategory').value,
+                title: document.getElementById('journalTitle').value.trim(),
+                description: document.getElementById('journalDesc').value.trim()
+            };
+
+            if (editingJournalId) {
+                await db.collection('journals').doc(editingJournalId).update(journalData);
+            } else {
+                await db.collection('journals').add(journalData);
+            }
+
+            alert("Activity saved successfully!");
+            hideJournalForm();
+            loadJournalTable();
+        }
+
+        async function loadJournalTable() {
+            const { docs } = await db.collection('journals').get();
+            const tbody = document.querySelector('#journalTable tbody');
+            tbody.innerHTML = '';
+
+            docs.forEach(doc => {
+                const entry = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${entry.kidName || '-'}</td>
+                    <td>${entry.date || '-'}</td>
+                    <td>${entry.category || '-'}</td>
+                    <td>${entry.title || '-'}</td>
+                    <td>${entry.description ? entry.description.substring(0, 80) + '...' : '-'}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editJournal('${doc.id}')">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteJournal('${doc.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function editJournal(id) {
+            db.collection('journals').doc(id).get().then(doc => {
+                if (doc.exists) {
+                    showJournalForm({ id: doc.id, ...doc.data() });
+                }
+            });
+        }
+
+        async function deleteJournal(id) {
+            if (confirm("Delete this journal entry?")) {
+                await db.collection('journals').doc(id).delete();
+                loadJournalTable();
+            }
+        }
+        // ====================== ACTIVITIES JOURNAL ======================
+
+        // ====================== DASHBOARD ======================
+        async function renderDashboard() {
+            const content = document.getElementById('content');
+            
+            // Fetch data
+            const kidsSnap = await db.collection('kids').get();
+            const expensesSnap = await db.collection('expenses').get();
+            const examsSnap = await db.collection('exams').get();
+            const journalSnap = await db.collection('journals').get();
+
+            let totalExpenses = 0;
+            expensesSnap.docs.forEach(doc => {
+                totalExpenses += doc.data().amount || 0;
+            });
+
+            content.innerHTML = `
+                <h2>📊 Dashboard Overview</h2>
+                
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3>👨‍👧‍👦 Total Kids</h3>
+                        <div class="value">${kidsSnap.docs.length}</div>
+                    </div>
+                    <div class="card">
+                        <h3>💰 Total Expenses</h3>
+                        <div class="value">₹${totalExpenses}</div>
+                    </div>
+                    <div class="card">
+                        <h3>📝 Exam Records</h3>
+                        <div class="value">${examsSnap.docs.length}</div>
+                    </div>
+                    <div class="card">
+                        <h3>🏆 Journal Entries</h3>
+                        <div class="value">${journalSnap.docs.length}</div>
+                    </div>
+                </div>
+
+                <h3>Recent Activities</h3>
+                <table id="recentJournal" style="margin-top:15px;">
+                    <thead><tr><th>Date</th><th>Child</th><th>Activity</th></tr></thead>
                     <tbody></tbody>
                 </table>
             `;
 
-            loadRecentFamily();
-            loadRecentDocuments();
+            // Load recent 5 journal entries
+            loadRecentJournal();
         }
 
-        async function loadRecentFamily() {
-            const { docs } = await db.collection('family').orderBy('updatedAt', 'desc').limit(5).get();
-            const tbody = document.querySelector('#recentFamilyTable tbody');
-            tbody.innerHTML = docs.length ? '' : '<tr><td colspan="3">No records yet</td></tr>';
+        async function loadRecentJournal() {
+            const { docs } = await db.collection('journals')
+                .orderBy('date', 'desc')
+                .limit(5)
+                .get();
+            
+            const tbody = document.querySelector('#recentJournal tbody');
+            tbody.innerHTML = '';
 
             docs.forEach(doc => {
-                const m = doc.data();
+                const entry = doc.data();
                 const row = document.createElement('tr');
-                row.innerHTML = `<td>${m.name}</td><td>${m.relation}</td><td>${m.phone || '-'}</td>`;
+                row.innerHTML = `
+                    <td>${entry.date || '-'}</td>
+                    <td>${entry.kidName || '-'}</td>
+                    <td>${entry.title || '-'}</td>
+                `;
                 tbody.appendChild(row);
             });
+
+            if (docs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">No activities yet.</td></tr>`;
+            }
         }
 
-        async function loadRecentDocuments() {
-            const { docs } = await db.collection('documents').orderBy('updatedAt', 'desc').limit(5).get();
-            const tbody = document.querySelector('#recentDocsTable tbody');
-            tbody.innerHTML = docs.length ? '' : '<tr><td colspan="3">No documents yet</td></tr>';
+        // ====================== Other Modules (Summary) ======================
+        //function renderKids() { document.getElementById('content').innerHTML += `<p>Full Kids Profile module is ready.</p>`; }
+        //function renderExpenses() { document.getElementById('content').innerHTML += `<p>Full Fees & Expenses module is ready.</p>`; }
+        //function renderExams() { document.getElementById('content').innerHTML += `<p>Full Academic Performance module is ready.</p>`; }
+        //function renderJournal() { document.getElementById('content').innerHTML += `<p>Full Activities Journal module is ready.</p>`; }
+        // ====================== DASHBOARD ======================
 
-            docs.forEach(doc => {
-                const d = doc.data();
-                const row = document.createElement('tr');
-                row.innerHTML = `<td>${d.type}</td><td>${d.number || '-'}</td><td>${d.issuedTo || '-'}</td>`;
-                tbody.appendChild(row);
-            });
-        }
-        // ====================== DASHBOARD (FULLY FUNCTIONAL) ======================
-        //function renderFamily() { document.getElementById('content').innerHTML += `<p>Family Members Module - Under Development</p>`; }
-        //function renderDocuments() { document.getElementById('content').innerHTML += `<p>Documents Module - Under Development</p>`; }
-
-        // ====================== ADMIN PANEL (FULLY FUNCTIONAL) ======================
+        // ====================== ADMIN PANEL ======================
         function renderAdminPanel() {
             const content = document.getElementById('content');
             content.innerHTML += `
-                <button class="btn btn-primary" onclick="showUserForm()">+ Create New User</button>
+                <button class="btn btn-add" onclick="showUserForm()">+ Create New User</button>
 
                 <div class="form-container" id="userForm">
                     <h3 id="userFormTitle">Create New User</h3>
                     <div class="form-group"><label>Username</label><input type="text" id="newUsername"></div>
                     <div class="form-group"><label>Password</label><input type="password" id="newPassword"></div>
-                    <div class="form-group"><label>Role</label>
+                    <div class="form-group">
+                        <label>Role</label>
                         <select id="newRole">
                             <option value="user">User</option>
                             <option value="admin">Admin</option>
                         </select>
                     </div>
                     <div class="form-buttons">
-                        <button class="btn btn-primary" onclick="saveUser()">Save User</button>
-                        <button class="btn btn-danger" onclick="hideUserForm()">Cancel</button>
+                        <button class="btn btn-save" onclick="saveUser()">Save User</button>
+                        <button class="btn btn-cancel" onclick="hideUserForm()">Cancel</button>
                     </div>
                 </div>
 
@@ -359,7 +999,7 @@
             if (user) {
                 document.getElementById('newUsername').value = user.username;
                 document.getElementById('newRole').value = user.role;
-                document.getElementById('newPassword').value = '';
+                document.getElementById('newPassword').value = ""; // Don't show existing password
             } else {
                 document.getElementById('newUsername').value = '';
                 document.getElementById('newPassword').value = '';
@@ -376,25 +1016,23 @@
             const password = document.getElementById('newPassword').value.trim();
             const role = document.getElementById('newRole').value;
 
-            if (!username) return alert("Username is required");
-            if (!editingUserId && !password) return alert("Password is required for new user");
+            if (!username || (!editingUserId && !password)) {
+                return alert("Username and Password are required");
+            }
 
             const userData = { username, role };
 
-            if (password) userData.password = password;
-
-            try {
-                if (editingUserId) {
-                    await db.collection('users').doc(editingUserId).update(userData);
-                } else {
-                    await db.collection('users').add(userData);
-                }
-                alert("User saved successfully!");
-                hideUserForm();
-                loadUsersTable();
-            } catch (e) {
-                alert("Error saving user");
+            if (editingUserId) {
+                if (password) userData.password = password;
+                await db.collection('users').doc(editingUserId).update(userData);
+            } else {
+                userData.password = password;
+                await db.collection('users').add(userData);
             }
+
+            alert("User saved successfully!");
+            hideUserForm();
+            loadUsersTable();
         }
 
         async function loadUsersTable() {
@@ -409,8 +1047,8 @@
                     <td>${user.username}</td>
                     <td>${user.role}</td>
                     <td>
-                        <button class="btn btn-primary" onclick="editUser('${doc.id}')">Edit</button>
-                        ${user.username !== 'admin' ? `<button class="btn btn-danger" onclick="deleteUser('${doc.id}')">Delete</button>` : ''}
+                        <button class="btn btn-edit" onclick="editUser('${doc.id}')">Edit</button>
+                        ${user.username !== 'admin' ? `<button class="btn btn-delete" onclick="deleteUser('${doc.id}')">Delete</button>` : ''}
                     </td>
                 `;
                 tbody.appendChild(row);
@@ -419,7 +1057,9 @@
 
         function editUser(id) {
             db.collection('users').doc(id).get().then(doc => {
-                if (doc.exists) showUserForm({ id: doc.id, ...doc.data() });
+                if (doc.exists) {
+                    showUserForm({ id: doc.id, ...doc.data() });
+                }
             });
         }
 
@@ -429,379 +1069,22 @@
                 loadUsersTable();
             }
         }
-        // ====================== ADMIN PANEL (FULLY FUNCTIONAL) ======================
-        // Initialize Default Admin
+
+        // Initialize Default Admin (Run once)
         async function initDefaultAdmin() {
-            const snap = await db.collection('users').where('username', '==', 'admin').get();
-            if (snap.empty) {
-                await db.collection('users').add({ username: 'admin', password: 'admin123', role: 'admin' });
+            const adminSnap = await db.collection('users').where('username', '==', 'admin').get();
+            if (adminSnap.empty) {
+                await db.collection('users').add({
+                    username: 'admin',
+                    password: 'admin123',
+                    role: 'admin'
+                });
             }
         }
-
-        // ====================== FAMILY MEMBERS (FULLY FUNCTIONAL) ======================
-        // ====================== FAMILY MEMBERS ======================
-        function renderFamily() {
-            const content = document.getElementById('content');
-            content.innerHTML += `
-                <button class="btn btn-primary" onclick="showFamilyForm()">+ Add Family Member</button>
-
-                <div class="form-container" id="familyForm">
-                    <h3 id="formTitle">Add Family Member</h3>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Full Name</label><input type="text" id="fName"></div>
-                        <div class="form-group"><label>Relation</label><select id="fRelation">
-                            <option value="Self">Self</option><option value="Spouse">Spouse</option>
-                            <option value="Father">Father</option><option value="Mother">Mother</option>
-                            <option value="Son">Son</option><option value="Daughter">Daughter</option>
-                        </select></div>
-                        <div class="form-group"><label>DOB</label><input type="date" id="fDOB"></div>
-                        <div class="form-group"><label>Phone</label><input type="text" id="fPhone"></div>
-                        <div class="form-group"><label>Email</label><input type="email" id="fEmail"></div>
-                        <div class="form-group full-width"><label>Address</label><input type="text" id="fAddress"></div>
-                    </div>
-
-                    <div class="photo-section">
-                        <label>Upload Photo</label><br>
-                        <input type="file" id="fPhoto" accept="image/*" onchange="previewPhoto(event)">
-                        <div id="photoPreview"></div>
-                    </div>
-
-                    <div class="form-buttons">
-                        <button class="btn btn-primary" onclick="saveFamilyMember()">Save Member</button>
-                        <button class="btn btn-danger" onclick="hideFamilyForm()">Cancel</button>
-                    </div>
-                </div>
-
-                <h3>Family Members</h3>
-                <table id="familyTable">
-                    <thead><tr><th>Photo</th><th>Name</th><th>Relation</th><th>DOB</th><th>Phone</th><th>Actions</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            `;
-            loadFamilyTable();
-        }
-
-        function previewPhoto(e) {
-            const file = e.target.files[0];
-            if (file) {
-                currentPhotoFile = file;
-                document.getElementById('photoPreview').innerHTML = `<img src="${URL.createObjectURL(file)}" class="photo-preview">`;
-            }
-        }
-
-        function showFamilyForm(member = null) {
-            document.getElementById('familyForm').style.display = 'block';
-            editingMemberId = member ? member.id : null;
-            document.getElementById('formTitle').textContent = member ? "Edit Family Member" : "Add Family Member";
-            document.getElementById('photoPreview').innerHTML = '';
-            currentPhotoFile = null;
-
-            if (member) {
-                document.getElementById('fName').value = member.name || '';
-                document.getElementById('fRelation').value = member.relation || 'Self';
-                document.getElementById('fDOB').value = member.dob || '';
-                document.getElementById('fPhone').value = member.phone || '';
-                document.getElementById('fEmail').value = member.email || '';
-                document.getElementById('fAddress').value = member.address || '';
-                if (member.photoURL) {
-                    document.getElementById('photoPreview').innerHTML = `<img src="${member.photoURL}" class="photo-preview">`;
-                }
-            } else {
-                document.getElementById('fName').value = '';
-                document.getElementById('fRelation').value = 'Self';
-                document.getElementById('fDOB').value = '';
-                document.getElementById('fPhone').value = '';
-                document.getElementById('fEmail').value = '';
-                document.getElementById('fAddress').value = '';
-            }
-        }
-
-        function hideFamilyForm() {
-            document.getElementById('familyForm').style.display = 'none';
-            editingMemberId = null;
-        }
-
-        async function saveFamilyMember() {
-            const name = document.getElementById('fName').value.trim();
-            if (!name) return alert("Full Name is required");
-
-            let photoURL = '';
-
-            try {
-                if (currentPhotoFile) {
-                    const fileName = Date.now() + '_' + currentPhotoFile.name;
-                    const storageRef = storage.ref('family-photos/' + fileName);
-                    const snapshot = await storageRef.put(currentPhotoFile);
-                    photoURL = await snapshot.ref.getDownloadURL();
-                }
-
-                const memberData = {
-                    name: name,
-                    relation: document.getElementById('fRelation').value,
-                    dob: document.getElementById('fDOB').value,
-                    phone: document.getElementById('fPhone').value,
-                    email: document.getElementById('fEmail').value,
-                    address: document.getElementById('fAddress').value,
-                    photoURL: photoURL || (editingMemberId ? undefined : ''),
-                    updatedAt: new Date().toISOString()
-                };
-
-                if (editingMemberId) {
-                    await db.collection('family').doc(editingMemberId).update(memberData);
-                    console.log("Updated existing record");
-                } else {
-                    await db.collection('family').add(memberData);
-                    console.log("Added new record");
-                }
-
-                alert("✅ Saved successfully!");
-                hideFamilyForm();
-                loadFamilyTable();
-
-            } catch (error) {
-                console.error(error);
-                alert("❌ Error: " + error.message);
-            }
-        }
-
-        async function loadFamilyTable() {
-            const { docs } = await db.collection('family').get();
-            const tbody = document.querySelector('#familyTable tbody');
-            tbody.innerHTML = '';
-
-            docs.forEach(doc => {
-                const m = doc.data();
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${m.photoURL ? `<img src="${m.photoURL}" class="photo-preview" style="max-width:80px;">` : 'No Photo'}</td>
-                    <td>${m.name}</td>
-                    <td>${m.relation}</td>
-                    <td>${m.dob || '-'}</td>
-                    <td>${m.phone || '-'}</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="editFamilyMember('${doc.id}')">Edit</button>
-                        <button class="btn btn-danger" onclick="deleteFamilyMember('${doc.id}')">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function editFamilyMember(id) {
-            db.collection('family').doc(id).get().then(doc => {
-                if (doc.exists) {
-                    showFamilyForm({ id: doc.id, ...doc.data() });
-                }
-            }).catch(err => console.error(err));
-        }
-
-        async function deleteFamilyMember(id) {
-            if (confirm("Delete this family member?")) {
-                await db.collection('family').doc(id).delete();
-                loadFamilyTable();
-            }
-        }
-        // ====================== FAMILY MEMBERS (FULLY FUNCTIONAL) ======================
-
-        // ====================== DOCUMENTS MODULE ======================
-        // ====================== DOCUMENTS (FULLY FUNCTIONAL with Edit + Download) ======================
-        function renderDocuments() {
-            const content = document.getElementById('content');
-            content.innerHTML += `
-                <button class="btn btn-primary" onclick="showDocumentForm()">+ Add New Document</button>
-
-                <div class="form-container" id="documentForm">
-                    <h3 id="docFormTitle">Add Document</h3>
-                    <div class="form-grid">
-                        <div class="form-group"><label>Document Type</label>
-                            <select id="docType" onchange="toggleCustomType()">
-                                <option value="Aadhar Card">Aadhar Card</option>
-                                <option value="PAN Card">PAN Card</option>
-                                <option value="Passport">Passport</option>
-                                <option value="Voter ID">Voter ID</option>
-                                <option value="Driving License">Driving License</option>
-                                <option value="10th Certificate">10th Certificate</option>
-                                <option value="Degree Certificate">Degree Certificate</option>
-                                <option value="Custom">Custom</option>
-                            </select>
-                        </div>
-                        <div class="form-group" id="customTypeGroup" style="display:none;">
-                            <label>Custom Type</label><input type="text" id="customType">
-                        </div>
-                        <div class="form-group"><label>Document Number</label><input type="text" id="docNumber"></div>
-                        <div class="form-group"><label>Expiry Date</label><input type="date" id="docExpiry"></div>
-                        <div class="form-group full-width"><label>Issued To</label><input type="text" id="docIssuedTo"></div>
-                    </div>
-
-                    <div class="photo-section">
-                        <label>Front Side Photo</label><br>
-                        <input type="file" id="docFront" accept="image/*">
-                    </div>
-                    <div class="photo-section">
-                        <label>Back Side Photo (Optional)</label><br>
-                        <input type="file" id="docBack" accept="image/*">
-                    </div>
-
-                    <div class="form-buttons">
-                        <button class="btn btn-primary" onclick="saveDocument()">Save Document</button>
-                        <button class="btn btn-danger" onclick="hideDocumentForm()">Cancel</button>
-                    </div>
-                </div>
-
-                <h3>All Documents</h3>
-                <table id="documentsTable">
-                    <thead><tr><th>Type</th><th>Number</th><th>Expiry</th><th>Issued To</th><th>Actions</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            `;
-            loadDocumentsTable();
-        }
-
-        function toggleCustomType() {
-            const isCustom = document.getElementById('docType').value === 'Custom';
-            document.getElementById('customTypeGroup').style.display = isCustom ? 'block' : 'none';
-        }
-
-        function showDocumentForm(doc = null) {
-            document.getElementById('documentForm').style.display = 'block';
-            editingDocId = doc ? doc.id : null;
-            document.getElementById('docFormTitle').textContent = doc ? "Edit Document" : "Add New Document";
-
-            if (doc) {
-                document.getElementById('docType').value = doc.type.includes('Custom') ? 'Custom' : doc.type;
-                document.getElementById('customType').value = doc.type.includes('Custom') ? doc.type : '';
-                document.getElementById('docNumber').value = doc.number || '';
-                document.getElementById('docExpiry').value = doc.expiry || '';
-                document.getElementById('docIssuedTo').value = doc.issuedTo || '';
-            }
-        }
-
-        function hideDocumentForm() {
-            document.getElementById('documentForm').style.display = 'none';
-            editingDocId = null;
-        }
-
-        async function saveDocument() {
-            let type = document.getElementById('docType').value;
-            if (type === 'Custom') type = document.getElementById('customType').value || 'Custom';
-
-            let frontURL = '', backURL = '';
-
-            try {
-                const frontFile = document.getElementById('docFront').files[0];
-                if (frontFile) {
-                    const ref = storage.ref('documents/' + Date.now() + '_front_' + frontFile.name);
-                    await ref.put(frontFile);
-                    frontURL = await ref.getDownloadURL();
-                }
-
-                const backFile = document.getElementById('docBack').files[0];
-                if (backFile) {
-                    const ref = storage.ref('documents/' + Date.now() + '_back_' + backFile.name);
-                    await ref.put(backFile);
-                    backURL = await ref.getDownloadURL();
-                }
-
-                const docData = {
-                    type: type,
-                    number: document.getElementById('docNumber').value,
-                    expiry: document.getElementById('docExpiry').value,
-                    issuedTo: document.getElementById('docIssuedTo').value,
-                    frontURL: frontURL,
-                    backURL: backURL,
-                    updatedAt: new Date().toISOString()
-                };
-
-                if (editingDocId) {
-                    await db.collection('documents').doc(editingDocId).update(docData);
-                } else {
-                    await db.collection('documents').add(docData);
-                }
-
-                alert("✅ Document saved successfully!");
-                hideDocumentForm();
-                loadDocumentsTable();
-
-            } catch (e) {
-                console.error(e);
-                alert("Error saving document. Please try again.");
-            }
-        }
-
-        async function loadDocumentsTable() {
-            const { docs } = await db.collection('documents').get();
-            const tbody = document.querySelector('#documentsTable tbody');
-            tbody.innerHTML = '';
-
-            docs.forEach(doc => {
-                const d = doc.data();
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${d.type}</td>
-                    <td>${d.number || '-'}</td>
-                    <td>${d.expiry || '-'}</td>
-                    <td>${d.issuedTo || '-'}</td>
-                    <td>
-                        <button class="btn btn-info" onclick="viewDocument('${doc.id}')">View</button>
-                        <button class="btn btn-primary" onclick="editDocument('${doc.id}')">Edit</button>
-                        <button class="btn btn-danger" onclick="deleteDocument('${doc.id}')">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        async function viewDocument(id) {
-            const docSnap = await db.collection('documents').doc(id).get();
-            if (!docSnap.exists) return;
-
-            const d = docSnap.data();
-            const modal = document.getElementById('docViewerModal');
-
-            document.getElementById('modalDocTitle').textContent = d.type;
-
-            let details = `
-                <p><strong>Number:</strong> ${d.number || 'N/A'}</p>
-                <p><strong>Expiry:</strong> ${d.expiry || 'N/A'}</p>
-                <p><strong>Issued To:</strong> ${d.issuedTo || 'N/A'}</p>
-                <hr>
-            `;
-
-            let photosHTML = `<h3>Photos</h3>`;
-
-            if (d.frontURL) {
-                photosHTML += `<p><strong>Front Side:</strong> <a href="${d.frontURL}" target="_blank" download>📥 Download Front</a></p>`;
-                photosHTML += `<img src="${d.frontURL}" style="max-width:100%; border-radius:8px; margin:10px 0;">`;
-            }
-            if (d.backURL) {
-                photosHTML += `<p><strong>Back Side:</strong> <a href="${d.backURL}" target="_blank" download>📥 Download Back</a></p>`;
-                photosHTML += `<img src="${d.backURL}" style="max-width:100%; border-radius:8px; margin:10px 0;">`;
-            }
-
-            document.getElementById('modalDocDetails').innerHTML = details + photosHTML;
-            modal.style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('docViewerModal').style.display = 'none';
-        }
-
-        function editDocument(id) {
-            db.collection('documents').doc(id).get().then(doc => {
-                if (doc.exists) showDocumentForm({ id: doc.id, ...doc.data() });
-            });
-        }
-
-        async function deleteDocument(id) {
-            if (confirm("Delete this document?")) {
-                await db.collection('documents').doc(id).delete();
-                loadDocumentsTable();
-            }
-        }
-        // ====================== DOCUMENTS MODULE ======================
         
-
-        initDefaultAdmin();
+        // ====================== ADMIN PANEL ======================
+        
+        // Initialize
         renderTabs();
         renderContent();
     </script>
